@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.57">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Uday">
+<meta name="dcterms.date" content="2020-06-07">
+<meta name="description" content="Basics of inference statistics, sampling distributions, Bootstrapping, Confidence Intervals">
+
+<title>Foundations to inference Statistics – Uday’s AI Blog</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-fixed fullcontent">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Uday’s AI Blog</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/UdiBhaskar"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Foundations to inference Statistics</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">CLT</div>
+    <div class="quarto-category">sampling</div>
+    <div class="quarto-category">z-distribution</div>
+    <div class="quarto-category">t-distribution</div>
+    <div class="quarto-category">CI</div>
+    <div class="quarto-category">Confidence Interval</div>
+    <div class="quarto-category">Bootstrapping</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    Basics of inference statistics, sampling distributions, Bootstrapping, Confidence Intervals
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Uday </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">June 7, 2020</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div id="cell-1" class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> seaborn <span class="im">as</span> sns</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> matplotlib <span class="im">import</span> rcParams</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># figure size in inches</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>rcParams[<span class="st">'figure.figsize'</span>] <span class="op">=</span> <span class="fl">11.7</span>,<span class="fl">8.27</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="sampling-distribution" class="level2">
+<h2 class="anchored" data-anchor-id="sampling-distribution">Sampling Distribution</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/FI_1.png" title="Credit:https://www.coursera.org/learn/inferential-statistics-intro" class="img-fluid figure-img"></p>
+<figcaption>‘title’</figcaption>
+</figure>
+</div>
+<p>Steps for the sampling distribution</p>
+<ol type="1">
+<li>Get <code>n</code> random samples each of size <code>m</code></li>
+<li>Calculate the sample statistic for each random sample.</li>
+<li>plot the sample statistics distribution</li>
+</ol>
+<div id="cell-8" class="cell" data-execution_count="26">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>np.random.seed(<span class="dv">10</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>random_population <span class="op">=</span> np.random.beta(<span class="dv">4</span>, <span class="dv">5</span>, size<span class="op">=</span><span class="dv">1000</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>random_sample_population <span class="op">=</span> np.random.choice(random_population, <span class="dv">400</span>, <span class="va">False</span>) <span class="co">#</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>sns.distplot(random_sample_population, hist<span class="op">=</span><span class="va">True</span>, kde<span class="op">=</span><span class="va">True</span>, color<span class="op">=</span><span class="st">'red'</span>, norm_hist<span class="op">=</span><span class="va">True</span>, label<span class="op">=</span><span class="st">"Population Dist"</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Population'</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>plt.legend()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Foundations to inference Stats_files/figure-html/cell-3-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-9" class="cell" data-execution_count="99">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'random population Mean --&gt;'</span>, np.mean(random_sample_population))</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'random population SD --&gt;'</span>, np.std(random_sample_population))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>random population Mean --&gt; 0.4597295869346082
+random population SD --&gt; 0.16002188241803594</code></pre>
+</div>
+</div>
+<section id="code-to-get-sampling-distribution" class="level4">
+<h4 class="anchored" data-anchor-id="code-to-get-sampling-distribution">Code to get sampling distribution</h4>
+<div id="cell-11" class="cell" data-execution_count="29">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>no_of_samples <span class="op">=</span> <span class="dv">5000</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>sample_size <span class="op">=</span> <span class="dv">50</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_sampling_dist(population, no_of_samples, sample_size, stat):</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">'''</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co">    population - random sample population we have </span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co">               - array or list</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co">    no_of_samples - number of samples (n)</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="co">    sample_size - size of each sample.(m) </span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co">    stat - sample stat to calculate. </span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="co">        - Function</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="co">    '''</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    sampling_dist <span class="op">=</span> []</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(no_of_samples): <span class="co">## n samples</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>        sample <span class="op">=</span> np.random.choice(population, sample_size, <span class="va">False</span>) <span class="co"># each of size m</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>        stat_val <span class="op">=</span> stat(sample) <span class="co">#calculating stat</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>        sampling_dist.append(stat_val)</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> sampling_dist</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>sampling_dist_mean <span class="op">=</span> get_sampling_dist(random_sample_population, no_of_samples, sample_size, np.mean)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-12" class="cell" data-execution_count="30">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">##ploting the sampling distribution. </span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>sns.distplot(sampling_dist_mean, hist<span class="op">=</span><span class="va">True</span>, kde<span class="op">=</span><span class="va">True</span>, color<span class="op">=</span><span class="st">'red'</span>, norm_hist<span class="op">=</span><span class="va">True</span>, label<span class="op">=</span><span class="st">"Sampling dist of mean"</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Sampling Dist of Mean'</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'sample means'</span>)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>plt.legend()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Foundations to inference Stats_files/figure-html/cell-6-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-13" class="cell" data-execution_count="31">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'Sampling Dist Mean --&gt;'</span>, np.mean(sampling_dist_mean))</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'Sampling Dist SD --&gt;'</span>, np.std(sampling_dist_mean))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Sampling Dist Mean --&gt; 0.46022309784271165
+Sampling Dist SD --&gt; 0.020887127365585376</code></pre>
+</div>
+</div>
+<ul>
+<li>We can do the above sampling distribution for any statistic value.</li>
+<li>If we observe the above means, sampling dist mean(x_bar) is nearly equal to the population mean(mu)</li>
+<li>We will call std of sampling dist as <code>standard error</code></li>
+</ul>
+</section>
+</section>
+<section id="central-limit-theorem" class="level2">
+<h2 class="anchored" data-anchor-id="central-limit-theorem">Central Limit Theorem:</h2>
+<p>The distribution of sample means is nearly normal with mean = poluation mean, std = population_std/sqrt(sample_size).</p>
+<p><br></p>
+<p><span class="math display">\[\begin{align}
+  \text{Sampling Dist ~}  N( \mu, \frac{\sigma}{\sqrt{\text{sample size}}}) \\
+    \end{align}\]</span></p>
+<p><br></p>
+<section id="conditions" class="level4">
+<h4 class="anchored" data-anchor-id="conditions">Conditions</h4>
+<ol type="1">
+<li>Sampled observations must be independent.</li>
+<li>If we do sampling with replacement, the sample size must be less than 10% of the population.</li>
+<li>The sample size of 30 is sufficient for most distributions. However, strongly skewed distributions can require larger sample sizes.</li>
+</ol>
+<p><br></p>
+<blockquote class="blockquote">
+<p>Tip: We can simulate the CLT with https://gallery.shinyapps.io/CLT_mean/</p>
+</blockquote>
+<div id="cell-19" class="cell" data-execution_count="32">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="fl">0.020887127365585376</span><span class="op">*</span>np.sqrt(sample_size))</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(np.std(random_population))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>0.14769429399712528
+0.15723732430046308</code></pre>
+</div>
+</div>
+<blockquote class="blockquote">
+<p>Warning: Can the Central Limit theorem apply to any other sample statistic like median, std? – No</p>
+</blockquote>
+</section>
+<section id="need-for-confidence-interval" class="level4">
+<h4 class="anchored" data-anchor-id="need-for-confidence-interval">Need for Confidence Interval</h4>
+<p>There will be variability in the point estimate because we can’t get the exact population data in real-time. so if we tell a range of mean(any stat), it will be useful. This is called a Confidence Interval. Before going into CI, we have to know Z and t distribution, confidence level.</p>
+</section>
+</section>
+<section id="z--distribution-or-standard-normal-distribution" class="level2">
+<h2 class="anchored" data-anchor-id="z--distribution-or-standard-normal-distribution">Z- Distribution or standard normal distribution:</h2>
+<p><br></p>
+<p><span class="math display">\[\begin{align}
+  Z =  \frac{ x - \mu}{\sigma} \\
+    \end{align}\]</span></p>
+<p><br></p>
+<blockquote class="blockquote">
+<p>Note: mean = 0, std = 1</p>
+</blockquote>
+<div id="cell-23" class="cell" data-execution_count="33">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>standard_normal <span class="op">=</span> np.random.standard_normal(size<span class="op">=</span><span class="dv">100000</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>sns.distplot(standard_normal, hist<span class="op">=</span><span class="va">True</span>, kde<span class="op">=</span><span class="va">True</span>, color<span class="op">=</span><span class="st">'red'</span>, norm_hist<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Z-Distribution'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="33">
+<pre><code>Text(0.5, 1.0, 'Z-Distribution')</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Foundations to inference Stats_files/figure-html/cell-9-output-2.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="confidence-level" class="level2">
+<h2 class="anchored" data-anchor-id="confidence-level">Confidence level</h2>
+<p>The probability that the value of a parameter falls within a specified range of values. This will be very useful when we tell an interval. We can tell like, with 95% confidence, our statistic/parameter lies between lower bound and upper bound.</p>
+<p><br></p>
+<p>Let’s calculate confidence levels for the above z distribution.<br>
+For 95% confidence, <code>(100-95)/2 = 2.5</code>, we have to get the <code>2.5</code> percentile and <code>(100-2.5)=97.5</code> percentile.</p>
+<div id="cell-25" class="cell" data-execution_count="34">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>np.percentile(standard_normal, [<span class="fl">2.5</span>, <span class="fl">97.5</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="34">
+<pre><code>array([-1.94948191,  1.94622294])</code></pre>
+</div>
+</div>
+<p>Our z scores lie between -1.95 and 1.95 with 95% confidence. based on above simulation( right value is 1.96, if we take more size, we will get 1.96) We can get this using (100-C)/2, 100-((100-c)/2) where C = 95 if we need 95% of confidence.</p>
+<p>We can get these using the <code>scipy.stats.norm.ppf</code> function but in this function takes all the values with 0-1 only not 0-100 so 95% will become 0.95. We can get this using (1-C)/2, 1-((1-c)/2) where C = 0.95 if we need 95% of confidence.</p>
+<div id="cell-29" class="cell" data-execution_count="35">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.stats <span class="im">import</span> norm</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_qnorm(CL):</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">'''get the  value in zdist for given CL</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co">    CL - Confidence level(0-1)'''</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    val <span class="op">=</span> (<span class="dv">1</span><span class="op">-</span>CL)<span class="op">/</span><span class="dv">2</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> norm.ppf(val), norm.ppf(<span class="dv">1</span><span class="op">-</span>val)</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>get_qnorm(<span class="fl">0.95</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="35">
+<pre><code>(-1.959963984540054, 1.959963984540054)</code></pre>
+</div>
+</div>
+<div id="cell-30" class="cell" data-execution_count="36">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">##99 confidence level</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>get_qnorm(<span class="fl">0.99</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="36">
+<pre><code>(-2.5758293035489004, 2.5758293035489004)</code></pre>
+</div>
+</div>
+<div id="cell-31" class="cell" data-execution_count="37">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">##64 confidence level</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>get_qnorm(<span class="fl">0.684</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="37">
+<pre><code>(-1.0027116650265495, 1.0027116650265495)</code></pre>
+</div>
+</div>
+</section>
+<section id="students-t-distribution" class="level2">
+<h2 class="anchored" data-anchor-id="students-t-distribution">Student’s t-distribution:</h2>
+<p>It is useful when population std is unknown. If the sample size is small, we may not get better results with the Z distribution. It is similar to the Z distribution bell-shaped curve but thicker tails than normal. Other than mean, std, it has another parameter called <code>degree of freedom</code> = n-1. It is wider so intervals that we get from t-dist are also wider.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/FI_2.png" title="Credit:https://en.wikipedia.org/wiki/Student%27s_t-distribution" class="img-fluid figure-img"></p>
+<figcaption>‘title’</figcaption>
+</figure>
+</div>
+<div id="cell-33" class="cell" data-execution_count="38">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.stats <span class="im">import</span> t</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_qnorm_t(CL, df):</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">'''get the  value in t-dist for given CL</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="co">    CL - Confidence level(0-1)'''</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    val <span class="op">=</span> (<span class="dv">1</span><span class="op">-</span>CL)<span class="op">/</span><span class="dv">2</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> t.ppf(val, df), t.ppf(<span class="dv">1</span><span class="op">-</span>val, df)</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>get_qnorm_t(<span class="fl">0.95</span>, <span class="dv">29</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="38">
+<pre><code>(-2.045229642132703, 2.045229642132703)</code></pre>
+</div>
+</div>
+<section id="difference-between-t-dist-and-z-dist" class="level4">
+<h4 class="anchored" data-anchor-id="difference-between-t-dist-and-z-dist">Difference between t-dist and z-dist</h4>
+<p>If we have more degrees of freedom(more samples), t-distribution will look like z-distribution. You can check that below.</p>
+<div id="cell-35" class="cell" data-execution_count="39">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>, <span class="dv">1000</span>, <span class="dv">50</span>):</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">'95</span><span class="sc">% o</span><span class="st">f CL with df '</span><span class="op">+</span><span class="bu">str</span>(i)<span class="op">+</span><span class="st">' is --&gt;'</span>,get_qnorm_t(<span class="fl">0.95</span>, i))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>95% of CL with df 0 is --&gt; (nan, nan)
+95% of CL with df 50 is --&gt; (-2.008559109715206, 2.008559109715206)
+95% of CL with df 100 is --&gt; (-1.9839715184496334, 1.9839715184496334)
+95% of CL with df 150 is --&gt; (-1.9759053308869137, 1.9759053308869137)
+95% of CL with df 200 is --&gt; (-1.9718962236316089, 1.9718962236316089)
+95% of CL with df 250 is --&gt; (-1.9694983934204002, 1.9694983934204002)
+95% of CL with df 300 is --&gt; (-1.9679030112607843, 1.9679030112607843)
+95% of CL with df 350 is --&gt; (-1.9667650028635124, 1.9667650028635124)
+95% of CL with df 400 is --&gt; (-1.965912343229391, 1.965912343229391)
+95% of CL with df 450 is --&gt; (-1.965249664736427, 1.965249664736427)
+95% of CL with df 500 is --&gt; (-1.9647198374673438, 1.9647198374673438)
+95% of CL with df 550 is --&gt; (-1.964286550912067, 1.964286550912067)
+95% of CL with df 600 is --&gt; (-1.9639256220427195, 1.9639256220427195)
+95% of CL with df 650 is --&gt; (-1.963620322372358, 1.963620322372358)
+95% of CL with df 700 is --&gt; (-1.963358711099814, 1.963358711099814)
+95% of CL with df 750 is --&gt; (-1.9631320366857694, 1.9631320366857694)
+95% of CL with df 800 is --&gt; (-1.9629337387277888, 1.9629337387277888)
+95% of CL with df 850 is --&gt; (-1.9627588026071148, 1.9627588026071148)
+95% of CL with df 900 is --&gt; (-1.9626033295371894, 1.9626033295371894)
+95% of CL with df 950 is --&gt; (-1.962464242556152, 1.962464242556152)</code></pre>
+</div>
+</div>
+<div id="cell-36" class="cell" data-execution_count="40">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>get_qnorm(<span class="fl">0.95</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="40">
+<pre><code>(-1.959963984540054, 1.959963984540054)</code></pre>
+</div>
+</div>
+<div id="cell-37" class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>get_qnorm_t(<span class="fl">0.95</span>, <span class="dv">50</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-38" class="cell" data-execution_count="41">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>, <span class="dv">1000</span>, <span class="dv">50</span>):</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">'90</span><span class="sc">% o</span><span class="st">f CL with df '</span><span class="op">+</span><span class="bu">str</span>(i)<span class="op">+</span><span class="st">' is --&gt;'</span>,get_qnorm_t(<span class="fl">0.90</span>, i))</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'-'</span><span class="op">*</span><span class="dv">50</span>)</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'90</span><span class="sc">% o</span><span class="st">f CL in Z-dist is --&gt;'</span>, get_qnorm(<span class="fl">0.90</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>90% of CL with df 0 is --&gt; (nan, nan)
+90% of CL with df 50 is --&gt; (-1.6759050245283318, 1.6759050245283311)
+90% of CL with df 100 is --&gt; (-1.6602343260657506, 1.66023432606575)
+90% of CL with df 150 is --&gt; (-1.655075500184607, 1.6550755001846063)
+90% of CL with df 200 is --&gt; (-1.6525081009102696, 1.652508100910269)
+90% of CL with df 250 is --&gt; (-1.6509714898126593, 1.6509714898126586)
+90% of CL with df 300 is --&gt; (-1.6499486739375542, 1.6499486739375535)
+90% of CL with df 350 is --&gt; (-1.6492188695371959, 1.6492188695371952)
+90% of CL with df 400 is --&gt; (-1.6486719414653956, 1.648671941465395)
+90% of CL with df 450 is --&gt; (-1.6482468047587875, 1.6482468047587868)
+90% of CL with df 500 is --&gt; (-1.6479068539295052, 1.6479068539295045)
+90% of CL with df 550 is --&gt; (-1.6476288171096811, 1.6476288171096805)
+90% of CL with df 600 is --&gt; (-1.647397191759995, 1.6473971917599943)
+90% of CL with df 650 is --&gt; (-1.6472012521875499, 1.6472012521875492)
+90% of CL with df 700 is --&gt; (-1.6470333412605698, 1.647033341260569)
+90% of CL with df 750 is --&gt; (-1.6468878462849894, 1.6468878462849887)
+90% of CL with df 800 is --&gt; (-1.6467605593740848, 1.6467605593740842)
+90% of CL with df 850 is --&gt; (-1.6466482638172075, 1.6466482638172069)
+90% of CL with df 900 is --&gt; (-1.6465484584682117, 1.646548458468211)
+90% of CL with df 950 is --&gt; (-1.6464591692544057, 1.646459169254405)
+--------------------------------------------------
+90% of CL in Z-dist is --&gt; (-1.6448536269514729, 1.6448536269514722)</code></pre>
+</div>
+</div>
+<p>From above, we can observe that, if df is large value( i.e n is large), t-distribution will yield similar results as z distribution.</p>
+</section>
+</section>
+<section id="confidence-interval-for-population-mean" class="level2">
+<h2 class="anchored" data-anchor-id="confidence-interval-for-population-mean">Confidence Interval for Population Mean:</h2>
+<p>Why we need CI:<br>
+There will be variability in the point estimate because we can’t get the exact population data in real-time. so if we tell a range of mean, it will be useful.</p>
+<p><br></p>
+<p>From the above CLT theorem, we know that sampling means follows a Normal distribution. we also know the properties of standard normal distribution like 68-95-99.7 rules( even we can compute for any value) i.e we can tell with 68% confidence that, mean is between <code>mean-1*std_sampling_dist</code>, <code>mean+1*std_sampling_dist</code>.</p>
+<p><br></p>
+<p><span class="math display">\[\begin{align}
+  \text{CI of Mean =}  \mu \pm z^{*} * SE\\
+  \text{CI of Mean =}  \mu \pm t^{*} * SE\\
+    \end{align}\]</span></p>
+<div id="cell-41" class="cell" data-execution_count="42">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.stats <span class="im">import</span> norm</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_ci_mean(sampling_mean, SE, ci):</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">'''Get CI for mean using z-dist</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="co">    sampling_mean - sample mean</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="co">    SE - Standard error from CLT</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a><span class="co">    CI - Confidence level'''</span></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>    z_temp <span class="op">=</span> (<span class="dv">1</span><span class="op">-</span>(ci<span class="op">/</span><span class="dv">100</span>))<span class="op">/</span><span class="dv">2</span></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>    z <span class="op">=</span> <span class="bu">abs</span>(norm.ppf(z_temp))</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>    lower_bound <span class="op">=</span> sampling_mean <span class="op">-</span> z <span class="op">*</span> SE</span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>    upper_bound <span class="op">=</span> sampling_mean <span class="op">+</span> z <span class="op">*</span> SE</span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> lower_bound, upper_bound</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-42" class="cell" data-execution_count="43">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>n5_ci <span class="op">=</span> get_ci_mean(np.mean(sampling_dist_mean), np.std(sampling_dist_mean), <span class="dv">95</span>)</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'95% CI is'</span>, n5_ci)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>95% CI is (0.4192850804656633, 0.5011611152197599)</code></pre>
+</div>
+</div>
+<div id="cell-43" class="cell" data-execution_count="48">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.stats <span class="im">import</span> t</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_ci_mean_t(sampling_mean, SE, ci, df):</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">'''Get CI for mean using t-dist</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="co">    sampling_mean - sample mean</span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a><span class="co">    SE - Standard error from CLT</span></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a><span class="co">    CI - Confidence level</span></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a><span class="co">    df - degrees of freedom, (n-1)'''</span></span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>    t_temp <span class="op">=</span> (<span class="dv">1</span><span class="op">-</span>(ci<span class="op">/</span><span class="dv">100</span>))<span class="op">/</span><span class="dv">2</span></span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>    t_val <span class="op">=</span> <span class="bu">abs</span>(t.ppf(t_temp, df))</span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>    lower_bound <span class="op">=</span> sampling_mean <span class="op">-</span> t_val <span class="op">*</span> SE</span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>    upper_bound <span class="op">=</span> sampling_mean <span class="op">+</span> t_val <span class="op">*</span> SE</span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> lower_bound, upper_bound</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-44" class="cell" data-execution_count="49">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>n5_ci_t <span class="op">=</span> get_ci_mean_t(np.mean(sampling_dist_mean), np.std(sampling_dist_mean), <span class="dv">95</span>, sample_size<span class="op">-</span><span class="dv">1</span>)</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'95% CI is using t'</span>, n5_ci_t)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>95% CI is using t (0.41824884396920947, 0.5021973517162138)</code></pre>
+</div>
+</div>
+<div id="cell-45" class="cell" data-execution_count="46">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="bu">len</span>(sampling_dist_mean)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="46">
+<pre><code>5000</code></pre>
+</div>
+</div>
+<blockquote class="blockquote">
+<p>Tip: t distribution CI is wider than the Z distribution. Many times we don’t know what is the std of the population so it is better to use t distribution than z. If the sample size is larger, we can go for Z distribution(no issues if we have a large sample to analysis).</p>
+</blockquote>
+</section>
+<section id="how-to-predict-ci-parameters-other-than-mean" class="level2">
+<h2 class="anchored" data-anchor-id="how-to-predict-ci-parameters-other-than-mean">How to predict CI parameters other than mean</h2>
+<p>We know about sampling mean distribution so we can CI of mean very easily but how can we predict for median or percentile or IQR?</p>
+<p><br></p>
+<p>There is another set of methods to do stats called Non-Parametric methods. We can use the non-parametric methods and get the CI for any value without knowing the underlying distribution.</p>
+</section>
+<section id="bootstrapping" class="level2">
+<h2 class="anchored" data-anchor-id="bootstrapping">Bootstrapping:</h2>
+<p>Bootstrap Sample is Sampling with replacement of data of same size as shown below</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/FI_3.png" class="img-fluid figure-img"></p>
+<figcaption>‘title’</figcaption>
+</figure>
+</div>
+<section id="why-same-size" class="level4">
+<h4 class="anchored" data-anchor-id="why-same-size">Why same size?</h4>
+<p>the variation of the statistic will depend on the size of the sample. If we want to approximate this variation we need to use resamples of the same size.</p>
+</section>
+<section id="using-python" class="level4">
+<h4 class="anchored" data-anchor-id="using-python">Using Python</h4>
+<p>We can use <code>np.random.choice</code> to get the bootstrap samples.</p>
+<div id="cell-49" class="cell" data-execution_count="51">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co">###code to generate a Bootstrap sample</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>temp_population <span class="op">=</span> np.array([<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>, <span class="dv">5</span>, <span class="dv">6</span>, <span class="dv">7</span>, <span class="dv">8</span>, <span class="dv">9</span>, <span class="dv">10</span>])</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'Random Bootstrap sample from temp_population --&gt;'</span>, </span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>      np.random.choice(temp_population, size<span class="op">=</span><span class="bu">len</span>(temp_population),replace<span class="op">=</span><span class="va">True</span>))</span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'Random Bootstrap sample from temp_population --&gt;'</span>, </span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>      np.random.choice(temp_population, size<span class="op">=</span><span class="bu">len</span>(temp_population),replace<span class="op">=</span><span class="va">True</span>))</span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'Random Bootstrap sample from temp_population --&gt;'</span>, </span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>      np.random.choice(temp_population, size<span class="op">=</span><span class="bu">len</span>(temp_population),replace<span class="op">=</span><span class="va">True</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Random Bootstrap sample from temp_population --&gt; [ 3 10  1  8  5  8  8  3  6  5]
+Random Bootstrap sample from temp_population --&gt; [3 8 5 4 4 1 9 9 3 6]
+Random Bootstrap sample from temp_population --&gt; [10 10  4  7  2 10  9  2  7  3]</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="ci-using-bootstrapping" class="level2">
+<h2 class="anchored" data-anchor-id="ci-using-bootstrapping">CI using Bootstrapping:</h2>
+<p>There are many ways to calculate bootstrap samples.</p>
+<ol type="1">
+<li>Percentile Method</li>
+<li>Basic bootstrap Method or Reverse Percentile Interval</li>
+<li>Studentized-t Bootstrap Method</li>
+<li>Bias Corrected and accelerated</li>
+</ol>
+<p><br></p>
+<p>Some notations:</p>
+<p><span class="math inline">\(\tilde{\theta}_{m}\)</span> - statistic of Bootstrap sample m<br>
+<span class="math inline">\(\hat{\theta}\)</span> - statistic of data we have.<br>
+<span class="math inline">\(\theta\)</span> - statistic what we want to estimate.</p>
+<section id="percentile-method" class="level3">
+<h3 class="anchored" data-anchor-id="percentile-method">Percentile Method:</h3>
+<p>steps:</p>
+<ol type="1">
+<li>Get the m bootstrap samples.</li>
+<li>calculate the m statistics <span class="math inline">\(\tilde{\theta}_{1}, \tilde{\theta}_{1}, \tilde{\theta}_{3} ... \tilde{\theta}_{m}\)</span></li>
+<li>Get the percentile values based in the how much confidance we need. Eg. for 95% CL, get 2.5 percentile and 97.5 percentile.</li>
+</ol>
+<section id="code" class="level4">
+<h4 class="anchored" data-anchor-id="code">Code</h4>
+<div id="cell-52" class="cell" data-execution_count="85">
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>np.random.seed(<span class="dv">10</span>)</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_percentile_bs_ci(data, m, stat, cl):</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">'''</span></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a><span class="co">    percentile method to get BS-CI</span></span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a><span class="co">    data - data we have(sample)</span></span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a><span class="co">    m - number of bootstrap samples</span></span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a><span class="co">    stat - statistic to find - a function</span></span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a><span class="co">    cl - confidence level</span></span>
+<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a><span class="co">    '''</span></span>
+<span id="cb40-10"><a href="#cb40-10" aria-hidden="true" tabindex="-1"></a>    theta_stat <span class="op">=</span> []</span>
+<span id="cb40-11"><a href="#cb40-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(m):</span>
+<span id="cb40-12"><a href="#cb40-12" aria-hidden="true" tabindex="-1"></a>        bs_sample <span class="op">=</span> np.random.choice(data, m)</span>
+<span id="cb40-13"><a href="#cb40-13" aria-hidden="true" tabindex="-1"></a>        theta_stat.append(stat(bs_sample))</span>
+<span id="cb40-14"><a href="#cb40-14" aria-hidden="true" tabindex="-1"></a>    sns.distplot(theta_stat, hist<span class="op">=</span><span class="va">True</span>, kde<span class="op">=</span><span class="va">True</span>, color<span class="op">=</span><span class="st">'red'</span>, norm_hist<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb40-15"><a href="#cb40-15" aria-hidden="true" tabindex="-1"></a>    lower_bound <span class="op">=</span> (<span class="dv">1</span><span class="op">-</span>cl)<span class="op">/</span><span class="dv">2</span></span>
+<span id="cb40-16"><a href="#cb40-16" aria-hidden="true" tabindex="-1"></a>    upper_bound <span class="op">=</span> <span class="dv">1</span><span class="op">-</span>lower_bound</span>
+<span id="cb40-17"><a href="#cb40-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.percentile(theta_stat, [lower_bound<span class="op">*</span><span class="dv">100</span>, upper_bound<span class="op">*</span><span class="dv">100</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-53" class="cell" data-execution_count="86">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co">##using above function to get bootstrap CI</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>get_percentile_bs_ci(random_sample_population, <span class="dv">10000</span>, np.mean, <span class="fl">0.95</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="86">
+<pre><code>array([0.45656996, 0.46282595])</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Foundations to inference Stats_files/figure-html/cell-26-output-2.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>We can ge the same thing from <code>arch</code> module <br></p>
+<div id="cell-57" class="cell" data-execution_count="57">
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> arch.bootstrap <span class="im">import</span> IIDBootstrap</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>bs <span class="op">=</span> IIDBootstrap(random_sample_population)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-58" class="cell" data-execution_count="78">
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>bs.conf_int(func<span class="op">=</span>np.mean, reps<span class="op">=</span><span class="dv">10000</span>, method<span class="op">=</span><span class="st">'percentile'</span>, size<span class="op">=</span><span class="fl">0.95</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="78">
+<pre><code>array([[0.44397996],
+       [0.47526665]])</code></pre>
+</div>
+</div>
+<blockquote class="blockquote">
+<p>Important:CI from the percentile method is very narrow. If the underlying distribution is skew, it won’t work properly. so go for basic method or studentized-t method.</p>
+</blockquote>
+</section>
+</section>
+<section id="basic-bootstrap-method-or-reverse-percentile-interval-method" class="level3">
+<h3 class="anchored" data-anchor-id="basic-bootstrap-method-or-reverse-percentile-interval-method">Basic Bootstrap Method or Reverse Percentile Interval Method:</h3>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/FI_4.png" class="img-fluid figure-img"></p>
+<figcaption>‘Reverse Percentile Interval’</figcaption>
+</figure>
+</div>
+<p>steps:</p>
+<ol type="1">
+<li>calculate the statistic <span class="math inline">\(\hat{\theta}\)</span> on data we have.</li>
+<li>Get the m bootstrap samples.</li>
+<li>calculate the m statistics <span class="math inline">\(\tilde{\theta}_{1}, \tilde{\theta}_{1}, \tilde{\theta}_{3} ... \tilde{\theta}_{m}\)</span></li>
+<li>Calculate the CI with above formula.</li>
+</ol>
+<blockquote class="blockquote">
+<p>Note: It assumes distribution of <span class="math inline">\(\hat{\theta}-\tilde{\theta}\)</span> and <span class="math inline">\(\theta-\hat{\theta}\)</span> are simialr</p>
+</blockquote>
+<section id="code-1" class="level4">
+<h4 class="anchored" data-anchor-id="code-1">Code</h4>
+<div id="cell-62" class="cell" data-execution_count="88">
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>np.random.seed(<span class="dv">10</span>)</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_basic_bs_ci(data, m, stat, cl):</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">'''</span></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a><span class="co">    Reverse Percentile Interval Method</span></span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a><span class="co">    data- sample we have</span></span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a><span class="co">    m - number of bootstrap samples</span></span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a><span class="co">    stat - stat function to calculate</span></span>
+<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a><span class="co">    cl - confidence level</span></span>
+<span id="cb46-9"><a href="#cb46-9" aria-hidden="true" tabindex="-1"></a><span class="co">    '''</span></span>
+<span id="cb46-10"><a href="#cb46-10" aria-hidden="true" tabindex="-1"></a>    hat_theta <span class="op">=</span> stat(data)</span>
+<span id="cb46-11"><a href="#cb46-11" aria-hidden="true" tabindex="-1"></a>    theta_stat <span class="op">=</span> []</span>
+<span id="cb46-12"><a href="#cb46-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(m):</span>
+<span id="cb46-13"><a href="#cb46-13" aria-hidden="true" tabindex="-1"></a>        bs_sample <span class="op">=</span> np.random.choice(data, m)</span>
+<span id="cb46-14"><a href="#cb46-14" aria-hidden="true" tabindex="-1"></a>        theta_stat.append(stat(bs_sample))</span>
+<span id="cb46-15"><a href="#cb46-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">#sns.distplot(theta_stat, hist=True, kde=True, color='red', norm_hist=True)</span></span>
+<span id="cb46-16"><a href="#cb46-16" aria-hidden="true" tabindex="-1"></a>    lower_bound <span class="op">=</span> (<span class="dv">1</span><span class="op">-</span>cl)<span class="op">/</span><span class="dv">2</span></span>
+<span id="cb46-17"><a href="#cb46-17" aria-hidden="true" tabindex="-1"></a>    upper_bound <span class="op">=</span> <span class="dv">1</span><span class="op">-</span>lower_bound</span>
+<span id="cb46-18"><a href="#cb46-18" aria-hidden="true" tabindex="-1"></a>    lower_bound1 <span class="op">=</span> <span class="dv">2</span><span class="op">*</span>hat_theta <span class="op">-</span> np.percentile(theta_stat, upper_bound<span class="op">*</span><span class="dv">100</span>)</span>
+<span id="cb46-19"><a href="#cb46-19" aria-hidden="true" tabindex="-1"></a>    upper_bound1 <span class="op">=</span> <span class="dv">2</span><span class="op">*</span>hat_theta <span class="op">-</span> np.percentile(theta_stat, lower_bound<span class="op">*</span><span class="dv">100</span>)</span>
+<span id="cb46-20"><a href="#cb46-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> lower_bound1, upper_bound1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-63" class="cell" data-execution_count="93">
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>get_basic_bs_ci(random_sample_population, <span class="dv">1000</span>, np.mean, <span class="fl">0.95</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="93">
+<pre><code>(0.44972018316026047, 0.47056730107433303)</code></pre>
+</div>
+</div>
+<p>You can get the more optimized code from <code>arch.bootstrap</code></p>
+<div id="cell-65" class="cell" data-execution_count="90">
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> arch.bootstrap <span class="im">import</span> IIDBootstrap</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>bs <span class="op">=</span> IIDBootstrap(random_sample_population)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-66" class="cell" data-execution_count="94">
+<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>bs.conf_int(func<span class="op">=</span>np.mean, reps<span class="op">=</span><span class="dv">10000</span>, method<span class="op">=</span><span class="st">'basic'</span>, size<span class="op">=</span><span class="fl">0.95</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="94">
+<pre><code>array([[0.44406911],
+       [0.47499762]])</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="studentized-t-bootstrap-method" class="level3">
+<h3 class="anchored" data-anchor-id="studentized-t-bootstrap-method">Studentized-t Bootstrap Method:</h3>
+<p>If the distributions of <span class="math inline">\(\hat{\theta}-\tilde{\theta}\)</span> and <span class="math inline">\(\theta-\hat{\theta}\)</span> are not close, then the basic bootstrap confidence interval can be inaccurate. But even in this case, the distributions of <span class="math inline">\(\frac{\hat{\theta}-\tilde{\theta}}{SE(\tilde{\theta})}\)</span> and <span class="math inline">\(\frac{\theta-\hat{\theta}}{SE({\hat{\theta}})}\)</span> could be close. hence we could use studentized bootstrap CI. <br></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/FI_5.png" class="img-fluid figure-img"></p>
+<figcaption>‘studentized bs’</figcaption>
+</figure>
+</div>
+<p><br></p>
+<p>steps:</p>
+<ol type="1">
+<li>calculate the statistic <span class="math inline">\(\hat{\theta}\)</span> on data we have.</li>
+<li>Get the m bootstrap samples.</li>
+<li>For each Bootstrap sample
+<ol type="1">
+<li>compute the <span class="math inline">\(\tilde{\theta}\)</span></li>
+<li>compute <span class="math inline">\(SE({\tilde{\theta}})\)</span></li>
+<li>compute <span class="math inline">\(q = \frac{\tilde{\theta}-\hat{\theta}}{SE(\tilde{\theta})}\)</span></li>
+</ol></li>
+<li>Estimate <span class="math inline">\(SE(\hat{\theta})\)</span> (You can directly compute or use another Bootstrap approach.)</li>
+<li>Calculate CI using above formulation.</li>
+</ol>
+<section id="code-2" class="level4">
+<h4 class="anchored" data-anchor-id="code-2">code</h4>
+<div id="cell-69" class="cell" data-execution_count="95">
+<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> arch.bootstrap <span class="im">import</span> IIDBootstrap</span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>bs <span class="op">=</span> IIDBootstrap(random_sample_population)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-70" class="cell" data-execution_count="96">
+<div class="sourceCode cell-code" id="cb53"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>bs.conf_int(func<span class="op">=</span>np.mean, reps<span class="op">=</span><span class="dv">1000</span>, method<span class="op">=</span><span class="st">'studentized'</span>, size<span class="op">=</span><span class="fl">0.95</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="96">
+<pre><code>array([[0.44364941],
+       [0.47571528]])</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="bias-corrected-and-accelerated-bootstrap-ci" class="level3">
+<h3 class="anchored" data-anchor-id="bias-corrected-and-accelerated-bootstrap-ci">Bias Corrected and accelerated bootstrap CI:</h3>
+<p>The main advantage to the BCa interval is that it corrects for bias and skewness in the distribution of bootstrap estimates. The BCa interval requires that you estimate two parameters. The bias-correction parameter, z0, is related to the proportion of bootstrap estimates that are less than the observed statistic. The acceleration parameter, a, is proportional to the skewness of the bootstrap distribution</p>
+<p>To compute a BCa confidence interval, you estimate z0 and a and use them to adjust the endpoints of the percentile confidence interval (CI). If the bootstrap distribution is positively skewed, the CI is adjusted to the right. If the bootstrap distribution is negatively skewed, the CI is adjusted to the left.</p>
+<p>If the statistic is biased upward (that is, if it tends to be too large), the BCa bias correction moves the endpoints to the left. If the bootstrap distribution is skewed to the right, the BCa incorporates a correction to move the endpoints even farther to the right.</p>
+<p>You can read more about calculating z0 and a in https://projecteuclid.org/download/pdf_1/euclid.ss/1032280214</p>
+<section id="code-3" class="level4">
+<h4 class="anchored" data-anchor-id="code-3">code</h4>
+<div id="cell-73" class="cell" data-execution_count="97">
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> arch.bootstrap <span class="im">import</span> IIDBootstrap</span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>bs <span class="op">=</span> IIDBootstrap(random_sample_population)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-74" class="cell" data-execution_count="98">
+<div class="sourceCode cell-code" id="cb56"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>bs.conf_int(func<span class="op">=</span>np.mean, reps<span class="op">=</span><span class="dv">1000</span>, method<span class="op">=</span><span class="st">'bca'</span>, size<span class="op">=</span><span class="fl">0.95</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="98">
+<pre><code>array([[0.44443402],
+       [0.47456652]])</code></pre>
+</div>
+</div>
+</section>
+</section>
+</section>
+<section id="when-to-use-what" class="level2">
+<h2 class="anchored" data-anchor-id="when-to-use-what">When to use what?</h2>
+<ul>
+<li>If we have small sample size, basic methods like “basic”, “percentile” may give wider intervels so ‘BCa’ or ‘Studentized-t’ may be better. If you have skewness, go for ‘BCa’.</li>
+<li>If we have large data, all methods may give better intervals but if we have skewness, it is better to go for ‘BCa’.</li>
+</ul>
+<p><br></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/FI_6.png" class="img-fluid figure-img"></p>
+<figcaption>‘when to use’</figcaption>
+</figure>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
