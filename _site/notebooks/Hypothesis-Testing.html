@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.57">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Uday">
+<meta name="dcterms.date" content="2020-06-15">
+<meta name="description" content="Hypothesis testing using permutation">
+
+<title>Hypothesis Testing – Uday’s AI Blog</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-fixed fullcontent">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Uday’s AI Blog</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/UdiBhaskar"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Hypothesis Testing</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">Hypothesis testing</div>
+    <div class="quarto-category">null hypothesis</div>
+    <div class="quarto-category">2-sample test</div>
+    <div class="quarto-category">one-sample-test</div>
+    <div class="quarto-category">p-value</div>
+    <div class="quarto-category">anova</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    Hypothesis testing using permutation
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Uday </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">June 15, 2020</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="framework" class="level2">
+<h2 class="anchored" data-anchor-id="framework">Framework</h2>
+<ol type="1">
+<li>We start with a null hypothesis (H0) that represents the currect state ( Nothing going on, =, &lt;=, &gt;=)</li>
+<li>We also have an alternative hypothesis(HA) that represents the research question we are testing. ( something is hoing on, !=, &gt;, &lt;)</li>
+<li>We conduct a hypothesis test under the assumption that null hypothesis is true, either via simulation(Permutation test) or theoretical test using CLT.
+<ol type="1">
+<li>Choose a test statistic</li>
+<li>Compute the test statistic.</li>
+<li>Determine the frequency distribution of the test statistic under the hypothesis.</li>
+<li>Make a decision using this distribution as a guide as discussed in the point-4.</li>
+</ol></li>
+<li>If the test results suggest that the data do not provide convincing evidence for the alternative hypothesis, we stick with the null hypothesis. If they do, then we reject the null hypothesis in the favor of the alternate hypothesis. If P value is low (Lower than significance level), we say that it is unlikely to observe the data if the null hypotheis were true, and hence reject the null hypothesis. If it is High, we won’t reject the null hypothesis.<br>
+</li>
+<li>Always construct hypotheses about population parameters (e.g.&nbsp;population mean, μ) and not the sample statistics (e.g.&nbsp;sample mean)<br>
+</li>
+<li>Note that the alternative hypothesis might be one-sided (μ &lt; or &gt; the null value) or two-sided (μ≠ the null value), and the choice depends on the research question.</li>
+</ol>
+<p><br></p>
+<blockquote class="blockquote">
+<p>Important: P Value is the probability of obtaining a value of your test statistic that is at least as extream as what ws observed, under the assumption the null hypothesis is true. It is not the probability that the null hypothesis is True.</p>
+</blockquote>
+<p><br></p>
+<blockquote class="blockquote">
+<p>Note: P Value = Conditional probability of data given null hypothesis is true = P(observed or more extreme sample statistic ∣ H0 true)</p>
+</blockquote>
+<section id="steps" class="level3">
+<h3 class="anchored" data-anchor-id="steps">Steps</h3>
+<ol type="1">
+<li>Analyze the problem and state the Null Hypothesis</li>
+<li>State the Alternate Hypothesis</li>
+<li>Choose a test statistic and Compute the test statistic</li>
+<li>Determine the frequency distribution of the test statistic under the hypothesis.</li>
+<li>Calculate the P-Value for your CL based on two tail/single tail.</li>
+<li>Make a decision.</li>
+</ol>
+<p><br></p>
+<p>You can do one tailed or two tailed test based on the alternate hypothesis.</p>
+<ul>
+<li>A two sided Hypothesis with significance level alpha is equivalent to a confidence interval with <span class="math inline">\(CL = 1 - \alpha\)</span></li>
+<li>A one sided Hypothesis with significance level alpha is equivalent to a confidence interval with <span class="math inline">\(CL = 1- (2*\alpha)\)</span></li>
+</ul>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://miro.medium.com/max/862/1*VXxdieFiYCgR6v7nUaq01g.jpeg" title="Credit:https://towardsdatascience.com/everything-you-need-to-know-about-hypothesis-testing-part-i-4de9abebbc8a" class="img-fluid figure-img"></p>
+<figcaption>‘hypothesis cl’</figcaption>
+</figure>
+</div>
+<div id="cell-2" class="cell" data-execution_count="50">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> seaborn <span class="im">as</span> sns</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> matplotlib <span class="im">import</span> rcParams</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># figure size in inches</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>rcParams[<span class="st">'figure.figsize'</span>] <span class="op">=</span> <span class="fl">11.7</span>,<span class="fl">8.27</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-3" class="cell" data-execution_count="37">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">#you can download the data from https://www.kaggle.com/spscientist/students-performance-in-exams</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>sample_data <span class="op">=</span> pd.read_csv(<span class="st">"datasets_74977_169835_StudentsPerformance.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-4" class="cell" data-execution_count="44">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">##sample data </span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>sample_data.head()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="44">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">gender</th>
+<th data-quarto-table-cell-role="th">race/ethnicity</th>
+<th data-quarto-table-cell-role="th">parental level of education</th>
+<th data-quarto-table-cell-role="th">lunch</th>
+<th data-quarto-table-cell-role="th">test preparation course</th>
+<th data-quarto-table-cell-role="th">math score</th>
+<th data-quarto-table-cell-role="th">reading score</th>
+<th data-quarto-table-cell-role="th">writing score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>female</td>
+<td>group B</td>
+<td>bachelor's degree</td>
+<td>standard</td>
+<td>none</td>
+<td>72</td>
+<td>72</td>
+<td>74</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>female</td>
+<td>group C</td>
+<td>some college</td>
+<td>standard</td>
+<td>completed</td>
+<td>69</td>
+<td>90</td>
+<td>88</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>female</td>
+<td>group B</td>
+<td>master's degree</td>
+<td>standard</td>
+<td>none</td>
+<td>90</td>
+<td>95</td>
+<td>93</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>male</td>
+<td>group A</td>
+<td>associate's degree</td>
+<td>free/reduced</td>
+<td>none</td>
+<td>47</td>
+<td>57</td>
+<td>44</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>male</td>
+<td>group C</td>
+<td>some college</td>
+<td>standard</td>
+<td>none</td>
+<td>76</td>
+<td>78</td>
+<td>75</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="cell-5" class="cell" data-execution_count="40">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">##value counts of educatioin level</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>sample_data[<span class="st">'parental level of education'</span>].value_counts()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="40">
+<pre><code>some college          226
+associate's degree    222
+high school           196
+some high school      179
+bachelor's degree     118
+master's degree        59
+Name: parental level of education, dtype: int64</code></pre>
+</div>
+</div>
+<div id="cell-6" class="cell" data-execution_count="43">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">#test preparation </span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>sample_data[<span class="st">'test preparation course'</span>].value_counts()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="43">
+<pre><code>none         642
+completed    358
+Name: test preparation course, dtype: int64</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="comparing-two-independent-samples" class="level2">
+<h2 class="anchored" data-anchor-id="comparing-two-independent-samples">Comparing two independent samples</h2>
+<ol type="1">
+<li>2 groups must be independent with-in groups as well as between the groups.</li>
+<li>If we have skewness in the sample distribution, we need more samples for hypothesis testing.</li>
+</ol>
+<section id="problem-statement" class="level4">
+<h4 class="anchored" data-anchor-id="problem-statement">Problem Statement</h4>
+<p>We have to check whether there is a difference in the math score in students who completed the preparation course and not.</p>
+<div id="cell-8" class="cell" data-execution_count="45">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">###math scores of test completed and not completed</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>math_score_with_test <span class="op">=</span> sample_data[<span class="st">'math score'</span>][sample_data[<span class="st">'test preparation course'</span>]<span class="op">==</span><span class="st">'completed'</span>]</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>math_score_wo_test <span class="op">=</span> sample_data[<span class="st">'math score'</span>][sample_data[<span class="st">'test preparation course'</span>]<span class="op">==</span><span class="st">'none'</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-9" class="cell" data-execution_count="48">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">##no of students</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"No of students completed the course"</span>, <span class="bu">len</span>(math_score_with_test))</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"No of students not completed the course"</span>, <span class="bu">len</span>(math_score_wo_test))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>No of students completed the course 358
+No of students not completed the course 642</code></pre>
+</div>
+</div>
+<div id="cell-10" class="cell" data-execution_count="54">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Plotting distribution of mathscores of compeleted students</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>sns.distplot(math_score_with_test, hist<span class="op">=</span><span class="va">True</span>, kde<span class="op">=</span><span class="va">True</span>, color<span class="op">=</span><span class="st">'red'</span>, norm_hist<span class="op">=</span><span class="va">True</span>, label<span class="op">=</span><span class="st">"Completed the course"</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>plt.legend()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hypothesis-Testing_files/figure-html/cell-9-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-11" class="cell" data-execution_count="53">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Plotting distribution of mathscores of not compeleted students</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>sns.distplot(math_score_wo_test, hist<span class="op">=</span><span class="va">True</span>, kde<span class="op">=</span><span class="va">True</span>, color<span class="op">=</span><span class="st">'red'</span>, norm_hist<span class="op">=</span><span class="va">True</span>, label<span class="op">=</span><span class="st">"not completed the course"</span>)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>plt.legend()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hypothesis-Testing_files/figure-html/cell-10-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Step-1: We can compare the mean scores of both groups. so Null Hypothesis is “There is no difference in both groups”<br>
+H0 = There is no difference between the two groups.<br>
+mu_group1 = mu_group2<br>
+mu_group1 - mu_group2 = 0</p>
+<p><br></p>
+<p>Step-2: Alternate Hypothesis is “There is a difference between the two groups”<br>
+H0 = There is no difference between the two groups.<br>
+mu_group1 != mu_group2<br>
+mu_group1 - mu_group2 != 0</p>
+<p><br></p>
+<p>Step-3: Test Statistic and Calculate the Observed Test Statistic<br>
+T_obs = observed_group1_mean - observed_group2_mean = 5.617649106319291</p>
+<div id="cell-13" class="cell" data-execution_count="62">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>T_obs <span class="op">=</span> math_score_with_test.mean() <span class="op">-</span> math_score_wo_test.mean()</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>T_obs</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="62">
+<pre><code>5.617649106319291</code></pre>
+</div>
+</div>
+<p>Step-4: Simulate the distribution using the permutation test<br>
+#### Permutation simulation Let’s say we have n1 elements in group1 and n2 elements in the group2.</p>
+<ol type="1">
+<li>Combine the group1, group2.</li>
+<li>for each permutation data sample
+<ol type="1">
+<li>take first n1 elements as group1, rest n2 samples as group2.</li>
+<li>calculate the test statistic</li>
+</ol></li>
+</ol>
+</section>
+<section id="code" class="level4">
+<h4 class="anchored" data-anchor-id="code">Code</h4>
+<div id="cell-16" class="cell" data-execution_count="67">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">##we can get the permutations from np.random.permutations. </span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">5</span>):</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(np.random.permutation([<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>, <span class="dv">5</span>]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[3 2 4 1 5]
+[4 3 5 1 2]
+[5 1 3 4 2]
+[4 2 3 1 5]
+[3 2 5 1 4]</code></pre>
+</div>
+</div>
+<div id="cell-17" class="cell" data-execution_count="102">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>data_sample <span class="op">=</span> np.concatenate([math_score_with_test, math_score_wo_test])</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>n1 <span class="op">=</span> <span class="bu">len</span>(math_score_with_test)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>dist_test_stat <span class="op">=</span> []</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>np.random.seed(<span class="dv">85</span>)</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1000000</span>):</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    out <span class="op">=</span> np.random.permutation(data_sample) <span class="co">##random permutation</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    ts_cal <span class="op">=</span> out[:n1].mean() <span class="op">-</span> out[n1:].mean() <span class="co">##getting stat difference</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    dist_test_stat.append(ts_cal)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-18" class="cell" data-execution_count="103">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>sns.distplot(dist_test_stat, hist<span class="op">=</span><span class="va">True</span>, kde<span class="op">=</span><span class="va">True</span>, color<span class="op">=</span><span class="st">'red'</span>, norm_hist<span class="op">=</span><span class="va">True</span>, label<span class="op">=</span><span class="st">"Test Statistic distribution"</span>)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>plt.legend()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hypothesis-Testing_files/figure-html/cell-14-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-19" class="cell" data-execution_count="195">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>prob <span class="op">=</span> <span class="bu">sum</span>(np.array(dist_test_stat)<span class="op">&gt;=</span>T_obs)<span class="op">/</span><span class="dv">1000000</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-20" class="cell" data-execution_count="110">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>prob</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="110">
+<pre><code>1e-06</code></pre>
+</div>
+</div>
+<p>Step-5: Calculation the P-Value</p>
+<p>For two tailed test <span class="math inline">\(\text{P Value} = 2*min([0.5, prob, 1-prob])\)</span></p>
+<p>one tailed test with ‘greater than’ alternate hypothesis <span class="math inline">\(\text{P Value} = prob\)</span></p>
+<p>one tailed test with ‘less than’ alternate hypothesis <span class="math inline">\(\text{P Value} = 1- (prob)\)</span></p>
+<div id="cell-22" class="cell" data-execution_count="112">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>P_value <span class="op">=</span> <span class="dv">2</span><span class="op">*</span>np.<span class="bu">min</span>([<span class="fl">0.5</span>, prob, <span class="dv">1</span><span class="op">-</span>prob])</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'P_value'</span>, P_value)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>P_value 2e-06</code></pre>
+</div>
+</div>
+<p>Step-6: Make a Decision:</p>
+<p>For Significance Level of 5% (95% CL), P_value is very less so we reject the null hypothisis in favour of alternate.</p>
+<blockquote class="blockquote">
+<p>Note: In place of Test Statistic, you can use any formulation even t test stat also.</p>
+</blockquote>
+<p>You can do all the avove with permute module of Python.</p>
+</section>
+<section id="code-with-permute-module" class="level4">
+<h4 class="anchored" data-anchor-id="code-with-permute-module">Code with permute module</h4>
+<div id="cell-28" class="cell" data-execution_count="128">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> permute.core <span class="im">import</span> two_sample</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>sample_test <span class="op">=</span> two_sample(x<span class="op">=</span>math_score_with_test, y<span class="op">=</span>math_score_wo_test, reps<span class="op">=</span><span class="dv">100000</span>, </span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>                         stat<span class="op">=</span><span class="st">'mean'</span>, alternative<span class="op">=</span><span class="st">'two-sided'</span>, keep_dist<span class="op">=</span><span class="va">True</span>, seed<span class="op">=</span><span class="dv">10</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-29" class="cell" data-execution_count="161">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>sns.distplot(sample_test[<span class="dv">2</span>], hist<span class="op">=</span><span class="va">True</span>, kde<span class="op">=</span><span class="va">True</span>, color<span class="op">=</span><span class="st">'red'</span>, norm_hist<span class="op">=</span><span class="va">True</span>, label<span class="op">=</span><span class="st">"Test Statistic distribution"</span>)</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>plt.legend()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hypothesis-Testing_files/figure-html/cell-19-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-30" class="cell" data-execution_count="162">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"observed test Statistic"</span>, sample_test[<span class="dv">1</span>])</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"P-Value"</span>, sample_test[<span class="dv">0</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>observed test Statistic 5.617649106319291
+P-Value 1.999980000199998e-05</code></pre>
+</div>
+</div>
+</section>
+<section id="another-way-to-test" class="level4">
+<h4 class="anchored" data-anchor-id="another-way-to-test">Another way to test</h4>
+<ol type="1">
+<li>Get the CI of the mean(any stat) of two samples.</li>
+<li>If those CI not overlap, there is a difference between those.</li>
+</ol>
+<div id="cell-32" class="cell" data-execution_count="167">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> arch.bootstrap <span class="im">import</span> IIDBootstrap</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>bs <span class="op">=</span> IIDBootstrap(math_score_with_test)</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'Studentized-t CI of scores of test completed students--&gt;'</span>, bs.conf_int(func<span class="op">=</span>np.mean, reps<span class="op">=</span><span class="dv">1000</span>, method<span class="op">=</span><span class="st">'bca'</span>, size<span class="op">=</span><span class="fl">0.95</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Studentized-t CI of scores of test completed students--&gt; [[68.34468215]
+ [71.1424581 ]]</code></pre>
+</div>
+</div>
+<div id="cell-33" class="cell" data-execution_count="168">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>bs <span class="op">=</span> IIDBootstrap(math_score_wo_test)</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'Studentized-t CI of scores of test not completed students--&gt;'</span>, bs.conf_int(func<span class="op">=</span>np.mean, reps<span class="op">=</span><span class="dv">1000</span>, method<span class="op">=</span><span class="st">'bca'</span>, size<span class="op">=</span><span class="fl">0.95</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Studentized-t CI of scores of test not completed students--&gt; [[62.91883691]
+ [65.28373942]]</code></pre>
+</div>
+</div>
+<p>There is no overlap between these 95% CI, so there is a difference.</p>
+<blockquote class="blockquote">
+<p>Tip: What if we want to check mu_group1 - mu_group2 = some_number? We can formulate that as mu_group1 - mu_group2 - some_number = 0 =&gt; mu_group1 - (mu_group2 + some_number) = 0 or (mu_group1 - some_number) - mu_group2 = 0</p>
+</blockquote>
+</section>
+</section>
+<section id="comparing-two-dependent-samplespaired-test" class="level2">
+<h2 class="anchored" data-anchor-id="comparing-two-dependent-samplespaired-test">Comparing two dependent samples(Paired Test):</h2>
+<p>This type of test may be needed for pre-post study on the same people or repeated measures on the same set of people. In our sample data, let’s say we want to compare scores of reading and writing that are equal or not.</p>
+<ul>
+<li>In the above problem, students are same in the both samples. so there is a dependency, they are not independent.</li>
+<li>Two groups must be of same size because its a paired data.(n1=n2=n)</li>
+</ul>
+<p><br></p>
+<p>How to solve?</p>
+<ol type="1">
+<li>Get the difference(any value that you want to find) of two samples, so we will get n samples.</li>
+<li>Do 1 sample hypothesis test to find the difference is zero or not. or use bootstrapping to get the CI and check.</li>
+</ol>
+<p><br></p>
+<section id="one-sample-hypothesis-test-using-permutation" class="level4">
+<h4 class="anchored" data-anchor-id="one-sample-hypothesis-test-using-permutation">One-sample Hypothesis test using permutation</h4>
+<p>We have to check whether our mean(any stat) is centered around the zero or not. We don’t have two samples to permute so we can add random positive and negative signs and we can shuffle those signs to get the hypothesis null distribution.</p>
+<div id="cell-37" class="cell" data-execution_count="216">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>reading_score <span class="op">=</span> sample_data[<span class="st">'reading score'</span>]</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>writing_score <span class="op">=</span> sample_data[<span class="st">'writing score'</span>]</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>diff_score <span class="op">=</span> reading_score <span class="op">-</span> writing_score</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Step-1: Null Hypothesis is “difference of both scores is zero”<br>
+H0 = the difference between both scores is zero.<br>
+mean_diff_score = 0</p>
+<p><br></p>
+<p>Step-2: Alternate Hypothesis is “There is a difference in both scores”<br>
+H0 = There is a difference in both scores.<br>
+mean_diff_score != 0</p>
+<p><br></p>
+<p>Step-3: Test Statistic and Calculate the Observed Test Statistic<br>
+T_obs = mean(diff_score)</p>
+<div id="cell-39" class="cell" data-execution_count="217">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>T_obs <span class="op">=</span> diff_score.mean()</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(T_obs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>1.115</code></pre>
+</div>
+</div>
+<p>Step-4: Simulate the distribution using the permutation test</p>
+</section>
+<section id="one-sample-permutation-simulation" class="level4">
+<h4 class="anchored" data-anchor-id="one-sample-permutation-simulation">one sample Permutation simulation:</h4>
+<p>Let’s say we have n elements.</p>
+<ol type="1">
+<li><p>for M number of iterations</p>
+<ol type="1">
+<li>Generate random negative and positive signs of length n.&nbsp;</li>
+<li>assign those signs to the elements</li>
+<li>calculate the statistic value.</li>
+</ol></li>
+</ol>
+</section>
+<section id="code-1" class="level4">
+<h4 class="anchored" data-anchor-id="code-1">Code</h4>
+<div id="cell-42" class="cell" data-execution_count="219">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> generate_n_random_signs(n):</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">1</span><span class="op">-</span> <span class="dv">2</span><span class="op">*</span> np.random.binomial(<span class="dv">1</span>, <span class="fl">0.5</span>, size<span class="op">=</span>n)</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>generate_n_random_signs(<span class="dv">10</span>)<span class="op">*</span>np.random.randint(<span class="dv">1</span>, <span class="dv">10</span>, <span class="dv">10</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="219">
+<pre><code>array([ 9,  9,  4,  4, -4, -4,  9,  3, -3,  1])</code></pre>
+</div>
+</div>
+<div id="cell-43" class="cell" data-execution_count="221">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>dist_test_stat <span class="op">=</span> []</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>np.random.seed(<span class="dv">85</span>)</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>n <span class="op">=</span> <span class="bu">len</span>(diff_score)</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> tqdm(<span class="bu">range</span>(<span class="dv">1000000</span>)):</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>    out <span class="op">=</span> generate_n_random_signs(n) <span class="op">*</span> diff_score</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>    ts_cal <span class="op">=</span> out.mean()</span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>    dist_test_stat.append(ts_cal)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>100%|██████████████████████████████████████████████████████████████████████| 1000000/1000000 [08:04&lt;00:00, 2062.25it/s]</code></pre>
+</div>
+</div>
+<div id="cell-44" class="cell" data-execution_count="228">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co">##plotting</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>sns.distplot(dist_test_stat, hist<span class="op">=</span><span class="va">True</span>, kde<span class="op">=</span><span class="va">True</span>, color<span class="op">=</span><span class="st">'red'</span>, norm_hist<span class="op">=</span><span class="va">True</span>, label<span class="op">=</span><span class="st">"Test Statistic distribution"</span>)</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>plt.legend()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hypothesis-Testing_files/figure-html/cell-27-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-45" class="cell" data-execution_count="229">
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>prob <span class="op">=</span> <span class="bu">sum</span>(np.array(dist_test_stat)<span class="op">&gt;=</span>T_obs)<span class="op">/</span><span class="dv">1000000</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Step-5: Calculation the P Value</p>
+<div id="cell-47" class="cell" data-execution_count="230">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>P_value <span class="op">=</span> <span class="dv">2</span><span class="op">*</span>np.<span class="bu">min</span>([<span class="fl">0.5</span>, prob, <span class="dv">1</span><span class="op">-</span>prob])</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'P_value'</span>, P_value)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>P_value 2e-06</code></pre>
+</div>
+</div>
+<p>Step-6: Make a Decision:</p>
+<p>For Significance Level of 5% (95% CL), P value is very less so we reject the null hypothisis in favour of alternate.</p>
+<p>You can do all the avove with permute module of Python.</p>
+</section>
+<section id="code-with-permute-module-1" class="level4">
+<h4 class="anchored" data-anchor-id="code-with-permute-module-1">Code with permute module</h4>
+<div id="cell-51" class="cell" data-execution_count="245">
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> permute.core <span class="im">import</span> one_sample</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>one_sample_test <span class="op">=</span> one_sample(x<span class="op">=</span>diff_score, reps<span class="op">=</span><span class="dv">100000</span>, </span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>                         stat<span class="op">=</span><span class="st">'mean'</span>, alternative<span class="op">=</span><span class="st">'two-sided'</span>, keep_dist<span class="op">=</span><span class="va">False</span>, seed<span class="op">=</span><span class="dv">10</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-52" class="cell" data-execution_count="246">
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"observed test Statistic"</span>, one_sample_test[<span class="dv">1</span>])</span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"P-Value"</span>, one_sample_test[<span class="dv">0</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="246">
+<pre><code>(1.999980000199998e-05, 1.115)</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="comparing-n-independent-samples-permutation-anova" class="level2">
+<h2 class="anchored" data-anchor-id="comparing-n-independent-samples-permutation-anova">Comparing N independent samples: ( Permutation ANOVA)</h2>
+<ol type="1">
+<li>N groups must be independent with-in groups as well as between the groups.</li>
+<li>If we have skewness in the sample distribution, we need more samples for hypothesis testing.</li>
+</ol>
+<p>You can read about ANOVA at <a href="https://www.statisticshowto.com/probability-and-statistics/hypothesis-testing/anova/">this</a> or <a href="https://www.analyticsvidhya.com/blog/2018/01/anova-analysis-of-variance/">this</a>.</p>
+<p><br></p>
+<section id="one-way-anova" class="level4">
+<h4 class="anchored" data-anchor-id="one-way-anova">One-Way ANOVA:</h4>
+<p>Using one way ANOVA, we can compare the K groups variability. Those K groups must be independent.</p>
+<p>Test statistic for one way ANOVA = <span class="math inline">\(\sum_{k=1}^K n_k(\overline{X_k} - \overline{X})^2\)</span><br>
+<span class="math inline">\(n_k\)</span> = number of samples in group k<br>
+<span class="math inline">\(\overline{X_k}\)</span> = Mean of group k<br>
+<span class="math inline">\(\overline{X}\)</span> = Total mean (All groups)</p>
+<p>Except for the test statistic, everything is the same, we will permute the groups and calculate the test stat distribution.</p>
+<p><br></p>
+<section id="steps-1" class="level5">
+<h5 class="anchored" data-anchor-id="steps-1">Steps:</h5>
+<ol type="1">
+<li>Null Hypothesis - all the means are equal</li>
+<li>Alternate Hypothesis - all means are not equal</li>
+<li>Calculate the observed test statistic</li>
+<li>n times:<br>
+4.1. permute the values. take the first n1 as the first group, next n2 as the second group, .. nk as kth group.<br>
+4.2. calculate the test statistic using the above formula and add to the final dist.<br>
+</li>
+<li>Plot the distribution and calculate the P-value.</li>
+</ol>
+<p><br></p>
+<p>You can do above all with permute</p>
+<div id="cell-54" class="cell" data-execution_count="250">
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>sample_data[<span class="st">'parental level of education'</span>].value_counts()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="250">
+<pre><code>some college          226
+associate's degree    222
+high school           196
+some high school      179
+bachelor's degree     118
+master's degree        59
+Name: parental level of education, dtype: int64</code></pre>
+</div>
+</div>
+<div id="cell-55" class="cell" data-execution_count="257">
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>math_scores <span class="op">=</span> sample_data[<span class="st">'math score'</span>]</span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>education_groups <span class="op">=</span> sample_data[<span class="st">'parental level of education'</span>].values</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Null Hypothesis = math scores of every group of education is same.<br>
+Alternate Hypothesis = math scores are different in groups.</p>
+<div id="cell-57" class="cell" data-execution_count="263">
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> permute.ksample <span class="im">import</span> k_sample</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>ns_oneway_anova <span class="op">=</span> k_sample(x<span class="op">=</span>math_scores, group<span class="op">=</span>education_groups, reps<span class="op">=</span><span class="dv">100000</span>, stat<span class="op">=</span><span class="st">'one-way anova'</span>, keep_dist<span class="op">=</span><span class="va">True</span>, seed<span class="op">=</span><span class="dv">10</span> )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-58" class="cell" data-execution_count="265">
+<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>sns.distplot(ns_oneway_anova[<span class="dv">2</span>], hist<span class="op">=</span><span class="va">True</span>, kde<span class="op">=</span><span class="va">True</span>, color<span class="op">=</span><span class="st">'red'</span>, norm_hist<span class="op">=</span><span class="va">True</span>, label<span class="op">=</span><span class="st">"Test Statistic distribution"</span>)</span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>plt.legend()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Hypothesis-Testing_files/figure-html/cell-35-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-59" class="cell" data-execution_count="266">
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"observed test Statistic"</span>, ns_oneway_anova[<span class="dv">1</span>])</span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"P-Value"</span>, ns_oneway_anova[<span class="dv">0</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>observed test Statistic 7295.561831098111
+P-Value 9.99990000099999e-06</code></pre>
+</div>
+</div>
+<p>We can do two way anowas with <code>permute.ksample.bivariate_k_sample</code></p>
+
+
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.57">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Uday">
+<meta name="dcterms.date" content="2020-02-03">
+<meta name="description" content="Proper ways to training and debugging of a neural network">
+
+<title>Effective Training and Debugging of a Neural Networks – Uday’s AI Blog</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+
+</head>
+
+<body class="nav-fixed fullcontent">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Uday’s AI Blog</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/UdiBhaskar"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Effective Training and Debugging of a Neural Networks</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">Debugging NN</div>
+    <div class="quarto-category">Neural Network</div>
+    <div class="quarto-category">training</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    Proper ways to training and debugging of a neural network
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Uday </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">February 3, 2020</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>In this blog, I want to discuss Training and Debugging of a NN in a practical manner.</p>
+<p>I am taking a cyber troll dataset. It is a classification data with labels aggressive or not. This is mostly inspired from <a href="http://karpathy.github.io/2019/04/25/recipe/">this</a> blog.</p>
+<p>Whenever I train any neural network, I will divide that into subtasks as below. I am assuming, you already set your project goals and evaluation metrics.</p>
+<ol type="1">
+<li>If you don’t have proper data, create/collect proper data.</li>
+<li>Data preprocessing, EDA and creating structured data.</li>
+<li>Writing a basic Model.</li>
+<li>Training and debugging with very small data. Try to overfit to the very small training data(we will get to know basic errors and rectify it).</li>
+<li>Writing a better data pipeline to train the NN with total data.</li>
+<li>Train the model with Total data and Tune the model parameters. (While training, we may face some issues and you have to rectify those)</li>
+<li>Compare the model with the SOTA/any other real-time systems and try to improve the model by changing the basic model or training a new model. so you have to go to step-3 again with a new model.</li>
+<li>Compare the results and do the error analysis. I personally feel, based on error analysis, we can improve the model so much. It is similar to the active learning concept.</li>
+<li>If you feel data is the issue, go to step-1 and check again.</li>
+</ol>
+<div id="cell-2" class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">##basic imports</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> random <span class="im">as</span> rn</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tensorflow <span class="im">as</span> tf</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> tensorflow.keras.layers <span class="im">import</span> LSTM, GRU, Dense, Input, Embedding</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> tensorflow.keras.models <span class="im">import</span> Model</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="data-processing" class="level2">
+<h2 class="anchored" data-anchor-id="data-processing">Data Processing</h2>
+<div id="cell-4" class="cell" data-outputid="7348c17e-75aa-492f-dd99-ad42117fcaae">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">##reading the data</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>cyber_troll_data <span class="op">=</span> pd.read_json(<span class="st">'Dataset for Detection of Cyber-Trolls.json'</span>, lines<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>cyber_troll_data.head(<span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="3">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">content</th>
+<th data-quarto-table-cell-role="th">annotation</th>
+<th data-quarto-table-cell-role="th">extras</th>
+<th data-quarto-table-cell-role="th">metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>Get fucking real dude.</td>
+<td>{'notes': '', 'label': ['1']}</td>
+<td>NaN</td>
+<td>{'first_done_at': 1527503426000, 'last_updated...</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>She is as dirty as they come and that crook R...</td>
+<td>{'notes': '', 'label': ['1']}</td>
+<td>NaN</td>
+<td>{'first_done_at': 1527503426000, 'last_updated...</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="cell-5" class="cell" data-outputid="831765da-9728-4083-ab75-fa883204eb48">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">#basic preprocessing</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>cyber_troll_data[<span class="st">'label'</span>]<span class="op">=</span>cyber_troll_data.annotation.<span class="bu">apply</span>(<span class="kw">lambda</span> x: <span class="bu">int</span>(x[<span class="st">'label'</span>][<span class="dv">0</span>]))</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>cyber_troll_data <span class="op">=</span> cyber_troll_data[[<span class="st">'content'</span>, <span class="st">'label'</span>]]</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>cyber_troll_data.head()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="4">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">content</th>
+<th data-quarto-table-cell-role="th">label</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>Get fucking real dude.</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>She is as dirty as they come and that crook R...</td>
+<td>1</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>why did you fuck it up. I could do it all day ...</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>Dude they dont finish enclosing the fucking sh...</td>
+<td>1</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>WTF are you talking about Men? No men thats no...</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="cell-6" class="cell" data-outputid="b9b88ace-3d94-43a0-b463-b1767047767b">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">#its a imbalance one</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>cyber_troll_data.label.value_counts()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="5">
+<pre><code>0    12179
+1     7822
+Name: label, dtype: int64</code></pre>
+</div>
+</div>
+<div id="cell-7" class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">##splitting data into train, validation and Test data. </span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>X_train, X_test, y_train, y_test <span class="op">=</span> train_test_split(cyber_troll_data.content, cyber_troll_data.label, </span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>                                                    test_size<span class="op">=</span><span class="fl">0.40</span>, stratify<span class="op">=</span>cyber_troll_data.label, random_state<span class="op">=</span><span class="dv">54</span>)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>X_test, X_val, y_test, y_val <span class="op">=</span> train_test_split(X_test, y_test, </span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>                                                    test_size<span class="op">=</span><span class="fl">0.50</span>, stratify<span class="op">=</span>y_test, random_state<span class="op">=</span><span class="dv">32</span>)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>tokenizer <span class="op">=</span> tf.keras.preprocessing.text.Tokenizer()</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>tokenizer.fit_on_texts(X_train)</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>X_train_tokens <span class="op">=</span> tokenizer.texts_to_sequences(X_train)</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>X_test_tokens <span class="op">=</span> tokenizer.texts_to_sequences(X_test)</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>X_val_tokens <span class="op">=</span> tokenizer.texts_to_sequences(X_val)</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>number_vocab <span class="op">=</span> <span class="bu">len</span>(tokenizer.word_index)<span class="op">+</span><span class="dv">1</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>X_train_pad_tokens <span class="op">=</span> tf.keras.preprocessing.sequence.pad_sequences(X_train_tokens, maxlen<span class="op">=</span><span class="dv">24</span>, padding<span class="op">=</span><span class="st">'post'</span>, truncating<span class="op">=</span><span class="st">'post'</span>)</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>X_test_pad_tokens <span class="op">=</span> tf.keras.preprocessing.sequence.pad_sequences(X_test_tokens, maxlen<span class="op">=</span><span class="dv">24</span>, padding<span class="op">=</span><span class="st">'post'</span>, truncating<span class="op">=</span><span class="st">'post'</span>)</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>X_val_pad_tokens <span class="op">=</span> tf.keras.preprocessing.sequence.pad_sequences(X_val_tokens, maxlen<span class="op">=</span><span class="dv">24</span>, padding<span class="op">=</span><span class="st">'post'</span>, truncating<span class="op">=</span><span class="st">'post'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We prepared the data. I am not doing perfect preprocessing and tokenization. You can do preprocessing in a better way.</p>
+<p>We have,<br>
+<code>X_train_pad_tokens, y_train  --&gt; To train   X_val_pad_tokens, y_val   --&gt; To validate and Tune   X_test_pad_tokens, y_test  --&gt; Don't use this data while trainig. Only use this after you are done with all the modelling.</code></p>
+<p>I am creating Training and Validation datasets to iterate over those using the tf.data pipeline. Please use less data as of now because, it will be easier to debug and easier to know about the error if we have any in our network, I will discuss this below. I am only using the first 100 data points with a batch size of 32.</p>
+<div id="cell-13" class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">##Creating the dataset( only 100 data points and will explain why after trainig process.) </span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>train_dataset <span class="op">=</span> tf.data.Dataset.from_tensor_slices((X_train_pad_tokens[<span class="dv">0</span>:<span class="dv">100</span>], y_train[<span class="dv">0</span>:<span class="dv">100</span>]))</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>train_dataset <span class="op">=</span> train_dataset.shuffle(<span class="dv">1000</span>).batch(<span class="dv">32</span>, drop_remainder<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>train_dataset <span class="op">=</span> train_dataset.prefetch(buffer_size<span class="op">=</span>tf.data.experimental.AUTOTUNE)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co">##creating test dataset using tf.data</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>val_dataset <span class="op">=</span> tf.data.Dataset.from_tensor_slices((X_val_pad_tokens[<span class="dv">0</span>:<span class="dv">100</span>], y_val[<span class="dv">0</span>:<span class="dv">100</span>]))</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>val_dataset <span class="op">=</span> val_dataset.batch(<span class="dv">32</span>, drop_remainder<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>val_dataset <span class="op">=</span> val_dataset.prefetch(buffer_size<span class="op">=</span>tf.data.experimental.AUTOTUNE)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><br></p>
+<p>Checking the data pairing issue and check the data given to neural network is correct or not. If it got corrupted, check/debug the data pipleline and rectify it. If you have images, try to plot the images and check.</p>
+<p>below, i have written a basic for loop to print. You can also print the words corresponding to the numbers and check.</p>
+<div id="cell-16" class="cell" data-outputid="0b1ecb5a-a717-4a7f-8d9e-6fc43ec1f253">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> input_text, output_label <span class="kw">in</span> train_dataset:</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(input_text[<span class="dv">0</span>:<span class="dv">3</span>], output_label[<span class="dv">0</span>:<span class="dv">3</span>])</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">break</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>tf.Tensor(
+[[ 186   89  741    5  385   43   11  127  919 1082  157    1    9  251
+     5  628    3 6970    5   11 4641   30    6   40]
+ [  27    3   26   28 1021   29    6    0    0    0    0    0    0    0
+     0    0    0    0    0    0    0    0    0    0]
+ [4647   72  606   43   16  684  223    1    9    3 4648  923    0    0
+     0    0    0    0    0    0    0    0    0    0]], shape=(3, 24), dtype=int32) tf.Tensor([0 1 1], shape=(3,), dtype=int32)</code></pre>
+</div>
+</div>
+</section>
+<section id="creating-a-neural-network" class="level2">
+<h2 class="anchored" data-anchor-id="creating-a-neural-network">Creating a Neural Network</h2>
+<p>Some of the rules to follow while writing/training your Neural Network.</p>
+<ul>
+<li>Start with a simple architecture - We are doing a text classification so, we can try a single layer LSTM.</li>
+<li>Use well studied default parameters like activation = relu, optimizer = adam, initialization = he for relu and Glorot for sigmoid/tanh. To know more about this, please read <a href="https://www.deeplearning.ai/ai-notes/initialization/">this</a> blog.</li>
+<li>Fix the random seeds so that we can reproduce the initializations/results to tune our models. - You have to fix all the random seeds in your model.</li>
+<li>Normalize the input data.</li>
+</ul>
+<p>I am writing a simple LSTM model by following all the above rules.</p>
+<div id="cell-18" class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">##LSTM</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co">##fixing numpy RS</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>np.random.seed(<span class="dv">42</span>)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co">##fixing tensorflow RS</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>tf.random.set_seed(<span class="dv">32</span>)</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="co">##python RS</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>rn.seed(<span class="dv">12</span>)</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="co">##model</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_model():</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    input_layer <span class="op">=</span> Input(shape<span class="op">=</span>(<span class="dv">24</span>,), name<span class="op">=</span><span class="st">"input_layer"</span>)</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">##i am initilizing randomly. But you can use predefined embeddings. </span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>    x_embedd <span class="op">=</span> Embedding(input_dim<span class="op">=</span>number_vocab, output_dim<span class="op">=</span><span class="dv">100</span>, input_length<span class="op">=</span><span class="dv">24</span>, mask_zero<span class="op">=</span><span class="va">True</span>, </span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>                        embeddings_initializer<span class="op">=</span>tf.keras.initializers.RandomNormal(mean<span class="op">=</span><span class="dv">0</span>, stddev<span class="op">=</span><span class="dv">1</span>, seed<span class="op">=</span><span class="dv">23</span>),</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>                         name<span class="op">=</span><span class="st">"Embedding_layer"</span>)(input_layer)</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>    x_lstm <span class="op">=</span> LSTM(units<span class="op">=</span><span class="dv">20</span>, activation<span class="op">=</span><span class="st">'tanh'</span>, recurrent_activation<span class="op">=</span><span class="st">'sigmoid'</span>, use_bias<span class="op">=</span><span class="va">True</span>, </span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>                 kernel_initializer<span class="op">=</span>tf.keras.initializers.glorot_uniform(seed<span class="op">=</span><span class="dv">26</span>),</span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>                 recurrent_initializer<span class="op">=</span>tf.keras.initializers.orthogonal(seed<span class="op">=</span><span class="dv">54</span>),</span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>                 bias_initializer<span class="op">=</span>tf.keras.initializers.zeros(), name<span class="op">=</span><span class="st">"LSTM_layer"</span>)(x_embedd)</span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>    x_out <span class="op">=</span> Dense(<span class="dv">1</span>, activation<span class="op">=</span><span class="st">'sigmoid'</span>, kernel_initializer<span class="op">=</span>tf.keras.initializers.glorot_uniform(seed<span class="op">=</span><span class="dv">45</span>),</span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>                  name<span class="op">=</span><span class="st">"output_layer"</span>)(x_lstm)</span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>    basic_lstm_model <span class="op">=</span> Model(inputs<span class="op">=</span>input_layer, outputs<span class="op">=</span>x_out, name<span class="op">=</span><span class="st">"basic_lstm_model"</span>)</span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> basic_lstm_model</span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>basic_lstm_model <span class="op">=</span> get_model()</span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>basic_lstm_model_anothertest <span class="op">=</span> get_model()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><br> Now i created two models named <code>basic_lstm_model</code>, <code>basic_lstm_model_anothertest</code>. Those two model initial weights will be the same because of the fixed random seed. This removes a factor of a variation and very useful to tune parameters by doing some experimentation on the same weight initialization.</p>
+<p>we can check this as below.</p>
+<div id="cell-21" class="cell" data-outputid="f6e39636-5459-4b50-9598-a3df14bf5fd7">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>[np.<span class="bu">all</span>(basic_lstm_model.get_weights()[i]<span class="op">==</span>basic_lstm_model_anothertest.get_weights()[i]) <span class="op">\</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a> <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(basic_lstm_model.get_weights()))]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="8">
+<pre><code>[True, True, True, True, True, True]</code></pre>
+</div>
+</div>
+</section>
+<section id="training-a-nn" class="level2">
+<h2 class="anchored" data-anchor-id="training-a-nn">Training a NN</h2>
+<p><code>Loss functions</code> - If we calculate the loss in the wrong manner, we will get the wrong gradients and it doesn’t learn perfectly.</p>
+<p>Some of the mistakes in Loss functions:</p>
+<ul>
+<li>one of the main mistakes in the loss creation is giving <code>wrong inputs</code> to the loss function. If we are using the cross-entropy, you have to give one-hot vector as input otherwise, use sparse_categorical_crossentropy(no need to give the one-hot vectors).</li>
+<li>If you are using a function that calculates the loss using unnormalized <code>logits</code>, don’t give the probability output as input to the loss function. ( check logits parameter in the tensorflow loss functions)</li>
+<li>It is useful to mask unnecessary output while calculating loss. Eg: don’t include output at the padded word position while calculation loss.</li>
+<li>Selecting a loss function that allowing the calculation of <code>large error</code> values. Because of this, your loss may explode, you may get NaN and it affects the gradients too.</li>
+</ul>
+<div id="cell-24" class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">##masked loss Eg for sequence output. </span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> maskedLoss(y_true, y_pred):</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">#getting mask value</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    mask <span class="op">=</span> tf.math.logical_not(tf.math.equal(y_true, <span class="dv">0</span>))</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">#calculating the loss</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    loss_ <span class="op">=</span> loss_function(y_true, y_pred)</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">#converting mask dtype to loss_ dtype</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    mask <span class="op">=</span> tf.cast(mask, dtype<span class="op">=</span>loss_.dtype)</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">#applying the mask to loss</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    loss_ <span class="op">=</span> loss_<span class="op">*</span>mask</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">#getting mean over all the values</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>    loss_ <span class="op">=</span> tf.reduce_sum(loss_)<span class="op">/</span>tf.reduce_sum(mask)</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> loss_</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-25" class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">##creating a loss object for this classification problem</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>loss_function <span class="op">=</span> tf.keras.losses.BinaryCrossentropy(from_logits<span class="op">=</span><span class="va">False</span>, reduction<span class="op">=</span><span class="st">'auto'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Training and validation functions</p>
+<ul>
+<li>We have to take care of the toggling training flag because some of the layers behaves differently in training and testing.</li>
+</ul>
+<div id="cell-28" class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">#optimizer</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>optimizer <span class="op">=</span> tf.keras.optimizers.Adam(learning_rate<span class="op">=</span><span class="fl">0.001</span>)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co">#trainign function</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="at">@tf.function</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> train_step(input_vector, output_vector,loss_fn):</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">#taping the gradients</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> tf.GradientTape() <span class="im">as</span> tape:</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>        <span class="co">#for ward prop</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>        output_predicted <span class="op">=</span> basic_lstm_model(inputs<span class="op">=</span>input_vector, training<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>        <span class="co">#loss calculation</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>        loss <span class="op">=</span> loss_fn(output_vector, output_predicted)</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">#getting gradients</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>    gradients <span class="op">=</span> tape.gradient(loss, basic_lstm_model.trainable_variables)</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">#applying gradients</span></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>    optimizer.apply_gradients(<span class="bu">zip</span>(gradients, basic_lstm_model.trainable_variables))</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> loss, output_predicted</span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a><span class="co">#validation function</span></span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a><span class="at">@tf.function</span></span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> val_step(input_vector, output_vector, loss_fn):</span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>    <span class="co">#forward prop</span></span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>    output_predicted <span class="op">=</span> basic_lstm_model(inputs<span class="op">=</span>input_vector, training<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a>    <span class="co">#loss calculation</span></span>
+<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a>    loss <span class="op">=</span> loss_fn(output_vector, output_predicted)</span>
+<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> loss, output_predicted</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Training the NN with proper data.</p>
+<ul>
+<li><p>While Training the model, I suggest you <code>don't write the complex pipelining</code> of the data and train your network at the start. If you do this, finding the bugs in your network is very difficult. Just get a few instances of data( maybe 10% of your total train data if you have 10K records) into your RAM and try to train your network. In this case, I have total data in my RAM so, I will slice a few batches and try to train the network.</p></li>
+<li><p>I will suggest you <code>don't include the data augmentation</code> as of now. It is useful for regularizing the model but try to avoid it at the start. Even if you do data augmentation, be careful about the labels. Eg: In the segmentation task, if you flip the image, you have to flip the label image as well.</p></li>
+<li><p>Check for <code>casting issues</code>. Eg. If layer needs int8, give the int8 value only as input. If you have float values, just cast the dtype. If data stored in the disk is float32, load the data into RAM with the same dtype.</p></li>
+<li><p>Check the <code>data pairing issue</code> i.e.&nbsp;while giving the train data, you have to give the correct pairs of x and y. Training the NN with proper data.</p></li>
+</ul>
+<p>Training the NN with data for 2 epochs and printing batchwise loss and finally getting mean of all those. Even if you use the .fit method of Keras API, it prints the aggregated value of loss/metric as part of verbose. You can check that aggregate class <a href="https://github.com/tensorflow/tensorflow/blob/e5bf8de410005de06a7ff5393fafdf832ef1d4ad/tensorflow/python/keras/engine/training_utils.py#L113">here</a></p>
+<div id="cell-32" class="cell" data-outputid="e871f1fa-76c8-4865-b847-e3d33095b3cf">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">##training</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>EPOCHS<span class="op">=</span><span class="dv">2</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co">##metrics # Even if you use .fit method, it alsocalculates batchwise loss/metric and aggregates those.  </span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>train_loss <span class="op">=</span> tf.keras.metrics.Mean(name<span class="op">=</span><span class="st">'train_loss'</span>)</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>val_loss <span class="op">=</span> tf.keras.metrics.Mean(name<span class="op">=</span><span class="st">'test_loss'</span>)</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> epoch <span class="kw">in</span> <span class="bu">range</span>(EPOCHS):</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">#losses</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    train_loss.reset_states()</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>    val_loss.reset_states()</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">#training</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">'Batchwise Train loss'</span>)</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> text_seq, label_seq <span class="kw">in</span> train_dataset:</span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>        loss_, pred_out <span class="op">=</span> train_step(text_seq, label_seq, loss_function)</span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(loss_)</span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>        train_loss(loss_)</span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>    <span class="co">#validation</span></span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">'Batchwise Val loss'</span>)</span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> text_seq_val, label_seq_val <span class="kw">in</span> val_dataset:</span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a>        loss_test, pred_out_test <span class="op">=</span> val_step(text_seq_val, label_seq_val, loss_function)</span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(loss_test)</span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a>        val_loss(loss_test)</span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a>    template <span class="op">=</span> <span class="st">'Epoch </span><span class="sc">{}</span><span class="st">, Mean Loss: </span><span class="sc">{}</span><span class="st">, Mean Val Loss: </span><span class="sc">{}</span><span class="st">'</span></span>
+<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(template.<span class="bu">format</span>(epoch<span class="op">+</span><span class="dv">1</span>, train_loss.result(), val_loss.result()))</span>
+<span id="cb16-30"><a href="#cb16-30" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">'-'</span><span class="op">*</span><span class="dv">50</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Batchwise Train loss
+tf.Tensor(0.69066906, shape=(), dtype=float32)
+tf.Tensor(0.6978342, shape=(), dtype=float32)
+tf.Tensor(0.7214557, shape=(), dtype=float32)
+Batchwise Val loss
+tf.Tensor(0.7479876, shape=(), dtype=float32)
+tf.Tensor(0.6868224, shape=(), dtype=float32)
+tf.Tensor(0.71952724, shape=(), dtype=float32)
+Epoch 1, Mean Loss: 0.7033197283744812, Mean Val Loss: 0.7181124687194824
+--------------------------------------------------
+Batchwise Train loss
+tf.Tensor(0.6816538, shape=(), dtype=float32)
+tf.Tensor(0.69258916, shape=(), dtype=float32)
+tf.Tensor(0.6689039, shape=(), dtype=float32)
+Batchwise Val loss
+tf.Tensor(0.744266, shape=(), dtype=float32)
+tf.Tensor(0.681653, shape=(), dtype=float32)
+tf.Tensor(0.71762204, shape=(), dtype=float32)
+Epoch 2, Mean Loss: 0.6810489296913147, Mean Val Loss: 0.7145137190818787
+--------------------------------------------------</code></pre>
+</div>
+</div>
+</section>
+<section id="debugging-and-enhancing-nn" class="level2">
+<h2 class="anchored" data-anchor-id="debugging-and-enhancing-nn">Debugging and Enhancing NN</h2>
+<p>Till now, we have created a basic NN for our problem and trained the NN. Now I will discuss some hacks to debug and enhance your training process to get better results.</p>
+<ul>
+<li><p>Using Basic print statements and checking the shapes of input and output of every layer. Using this, we can remove the <code>shape related error</code> or basic errors related to output while creating a model. If you want to print in tensorflow code, please use tf.print</p></li>
+<li><p>With Eager execution, we can debug our code very easily. it can be done using <code>pdb</code> or using any ide. You have to set <code>tf.config.experimental_run_functions_eagerly(True)</code> to debug your tf2.0 functions.</p></li>
+</ul>
+<div id="cell-35" class="cell" data-outputid="cc6c972f-2c5d-4b4b-8392-572ef1ee3778">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co">##LSTM</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>tf.config.experimental_run_functions_eagerly(<span class="va">True</span>)</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="co">##fixing numpy RS</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>np.random.seed(<span class="dv">42</span>)</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="co">##fixing tensorflow RS</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>tf.random.set_seed(<span class="dv">32</span>)</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="co">##python RS</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>rn.seed(<span class="dv">12</span>)</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pdb</span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a><span class="co">##model</span></span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_model_debug():</span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>    input_layer_d <span class="op">=</span> Input(shape<span class="op">=</span>(<span class="dv">24</span>,), name<span class="op">=</span><span class="st">"input_layer"</span>)</span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>    <span class="co">##i am initilizing randomly. But you can use predefined embeddings. </span></span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>    x_embedd_d<span class="op">=</span> Embedding(input_dim<span class="op">=</span>number_vocab, output_dim<span class="op">=</span><span class="dv">100</span>, input_length<span class="op">=</span><span class="dv">24</span>, mask_zero<span class="op">=</span><span class="va">True</span>, </span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>                        embeddings_initializer<span class="op">=</span>tf.keras.initializers.RandomNormal(mean<span class="op">=</span><span class="dv">0</span>, stddev<span class="op">=</span><span class="dv">1</span>, seed<span class="op">=</span><span class="dv">23</span>),</span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a>                         name<span class="op">=</span><span class="st">"Embedding_layer"</span>)(input_layer_d)</span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a>    <span class="co">#LSTM</span></span>
+<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a>    x_lstm_d <span class="op">=</span> LSTM(units<span class="op">=</span><span class="dv">20</span>, activation<span class="op">=</span><span class="st">'tanh'</span>, recurrent_activation<span class="op">=</span><span class="st">'sigmoid'</span>, use_bias<span class="op">=</span><span class="va">True</span>, </span>
+<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a>                 kernel_initializer<span class="op">=</span>tf.keras.initializers.glorot_uniform(seed<span class="op">=</span><span class="dv">26</span>),</span>
+<span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a>                 recurrent_initializer<span class="op">=</span>tf.keras.initializers.orthogonal(seed<span class="op">=</span><span class="dv">54</span>),</span>
+<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a>                 bias_initializer<span class="op">=</span>tf.keras.initializers.zeros(), name<span class="op">=</span><span class="st">"LSTM_layer"</span>)(x_embedd_d)</span>
+<span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb18-30"><a href="#cb18-30" aria-hidden="true" tabindex="-1"></a>    <span class="co">#trace</span></span>
+<span id="cb18-31"><a href="#cb18-31" aria-hidden="true" tabindex="-1"></a>    pdb.set_trace()</span>
+<span id="cb18-32"><a href="#cb18-32" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb18-33"><a href="#cb18-33" aria-hidden="true" tabindex="-1"></a>    x_out_d <span class="op">=</span> Dense(<span class="dv">1</span>, activation<span class="op">=</span><span class="st">'sigmoid'</span>, kernel_initializer<span class="op">=</span>tf.keras.initializers.glorot_uniform(seed<span class="op">=</span><span class="dv">45</span>),</span>
+<span id="cb18-34"><a href="#cb18-34" aria-hidden="true" tabindex="-1"></a>                  name<span class="op">=</span><span class="st">"output_layer"</span>)(x_lstm_d)</span>
+<span id="cb18-35"><a href="#cb18-35" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb18-36"><a href="#cb18-36" aria-hidden="true" tabindex="-1"></a>    basic_lstm_model_d <span class="op">=</span> Model(inputs<span class="op">=</span>input_layer_d, outputs<span class="op">=</span>x_out_d, name<span class="op">=</span><span class="st">"basic_lstm_model_d"</span>)</span>
+<span id="cb18-37"><a href="#cb18-37" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb18-38"><a href="#cb18-38" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> basic_lstm_model_d</span>
+<span id="cb18-39"><a href="#cb18-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-40"><a href="#cb18-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-41"><a href="#cb18-41" aria-hidden="true" tabindex="-1"></a>basic_model_debug <span class="op">=</span> get_model_debug()</span>
+<span id="cb18-42"><a href="#cb18-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-43"><a href="#cb18-43" aria-hidden="true" tabindex="-1"></a>tf.config.experimental_run_functions_eagerly(<span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>&gt; &lt;ipython-input-14-476c66b41633&gt;(31)get_model_debug()
+-&gt; x_out_d = Dense(1, activation='sigmoid', kernel_initializer=tf.keras.initializers.glorot_uniform(seed=45),
+(Pdb)  locals()
+{'input_layer_d': &lt;tf.Tensor 'input_layer_2:0' shape=(None, 24) dtype=float32&gt;, 'x_embedd_d': &lt;tf.Tensor 'Embedding_layer_2/Identity:0' shape=(None, 24, 100) dtype=float32&gt;, 'x_lstm_d': &lt;tf.Tensor 'LSTM_layer_2/Identity:0' shape=(None, 20) dtype=float32&gt;}
+(Pdb)  n
+&gt; &lt;ipython-input-14-476c66b41633&gt;(32)get_model_debug()
+-&gt; name="output_layer")(x_lstm_d)
+(Pdb)  n
+&gt; &lt;ipython-input-14-476c66b41633&gt;(34)get_model_debug()
+-&gt; basic_lstm_model_d = Model(inputs=input_layer_d, outputs=x_out_d, name="basic_lstm_model_d")
+(Pdb)  c</code></pre>
+</div>
+</div>
+<p>You can also Debug the Trainig loopas shown below.<br>
+For PDB instrctions, please check <a href="https://web.stanford.edu/class/physics91si/2013/handouts/Pdb_Commands.pdf">this</a> PDF.</p>
+<p><b>My preference and suggestion is to use IDE Debugger</b></p>
+<div id="cell-38" class="cell" data-outputid="10339c86-c872-4fc5-bb06-8b6e12447be7">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co">##training</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>EPOCHS<span class="op">=</span><span class="dv">1</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="co">##metrics # Even if you use .fit method, it alsocalculates batchwise loss/metric and aggregates those.  </span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>train_loss <span class="op">=</span> tf.keras.metrics.Mean(name<span class="op">=</span><span class="st">'train_loss'</span>)</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>tf.config.experimental_run_functions_eagerly(<span class="va">True</span>)</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> epoch <span class="kw">in</span> <span class="bu">range</span>(EPOCHS):</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    train_loss.reset_states()</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">'Batchwise Train loss'</span>)</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> text_seq, label_seq <span class="kw">in</span> train_dataset:</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>        pdb.set_trace()</span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>        loss_, pred_out <span class="op">=</span> train_step(text_seq, label_seq, loss_function)</span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(loss_)</span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>        train_loss(loss_)</span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>    template <span class="op">=</span> <span class="st">'Epoch </span><span class="sc">{}</span><span class="st">, Mean Loss: </span><span class="sc">{}</span><span class="st">'</span></span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(template.<span class="bu">format</span>(epoch<span class="op">+</span><span class="dv">1</span>, train_loss.result()))</span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">'-'</span><span class="op">*</span><span class="dv">50</span>)</span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>tf.config.experimental_run_functions_eagerly(<span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Batchwise Train loss
+&gt; &lt;ipython-input-15-aa3750dbfb83&gt;(13)&lt;module&gt;()
+-&gt; loss_, pred_out = train_step(text_seq, label_seq, loss_function)
+(Pdb)  s
+--Call--
+&gt; d:\softwares\anaconda3\envs\tf2\lib\site-packages\tensorflow_core\python\eager\def_function.py(551)__call__()
+-&gt; def __call__(self, *args, **kwds):
+(Pdb)  c
+tf.Tensor(0.66431165, shape=(), dtype=float32)
+&gt; &lt;ipython-input-15-aa3750dbfb83&gt;(12)&lt;module&gt;()
+-&gt; pdb.set_trace()
+(Pdb)  c
+tf.Tensor(0.6668887, shape=(), dtype=float32)
+&gt; &lt;ipython-input-15-aa3750dbfb83&gt;(13)&lt;module&gt;()
+-&gt; loss_, pred_out = train_step(text_seq, label_seq, loss_function)
+(Pdb)  c
+tf.Tensor(0.6523603, shape=(), dtype=float32)
+Epoch 1, Mean Loss: 0.6611868739128113
+--------------------------------------------------</code></pre>
+</div>
+</div>
+<ul>
+<li><p>Once you are done with the creation of the model, Try to Train the model with <code>less data</code>( i have taken 100 samples) and try to <code>overfit</code> the model to that data. To do so we increase the capacity of our model (e.g.&nbsp;add layers or filters) and verify that we can reach the lowest achievable loss (e.g.&nbsp;zero). If your model is unable to overfit a few data points, then either it’s too small (which is unlikely in today’s age), or something is wrong in its structure or the learning algorithm. check for bugs and try to remove those. I will discuss some of the bugs below. If this model is working fine without any bugs, you can train with full data.</p></li>
+<li><p><code>Tensorboard</code> is another important tool to debug NN while training. You can <code>visualize</code> the Loss, metrics, gradient/output histograms, distributions, graph and many more. I am writing code to plot all these in the tensorboard.</p></li>
+<li><p>As of now, we are printing/plotting the <code>Mean</code> loss/metric for all the batches in one epoch and, based on this we are analyzing the model performance. This may lead to wrong models for some of the loss functions/metrics. Even if you use the smoothing, it is not an accurate one, it will get an exponentially weighted average over batch-wise loss/metric. so Try to get a loss/metric for entire data of train and Val/test. If you have time/space constraint, at least get for the val/test data. Eg: Mean of Cross entropy over batches is equal to the cross-entropy over total data but not for AUC/F1 score.</p>
+<p>Below I have written code that calculates loss and metric(AUC) over batches and gets the mean as well as a total loss at once and a better Training and validation functions with tensorboard. please look into it.</p></li>
+</ul>
+<div id="cell-41" class="cell" data-outputid="02ff5031-4165-4c9a-e910-c793cc8ba9b2">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co">##training</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="co">##model creation</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>basic_lstm_model <span class="op">=</span> get_model()</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="co">##optimizer</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>optimizer <span class="op">=</span> tf.keras.optimizers.Adam(learning_rate<span class="op">=</span><span class="fl">0.005</span>)</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a><span class="co">##metric</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> roc_auc_score</span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a><span class="co">##train step function to train</span></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a><span class="at">@tf.function</span></span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> train_step(input_vector, output_vector,loss_fn):</span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> tf.GradientTape() <span class="im">as</span> tape:</span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>        <span class="co">#forward propagation</span></span>
+<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a>        output_predicted <span class="op">=</span> basic_lstm_model(inputs<span class="op">=</span>input_vector, training<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a>        <span class="co">#loss</span></span>
+<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a>        loss <span class="op">=</span> loss_fn(output_vector, output_predicted)</span>
+<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a>    <span class="co">#getting gradients</span></span>
+<span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a>    gradients <span class="op">=</span> tape.gradient(loss, basic_lstm_model.trainable_variables)</span>
+<span id="cb22-22"><a href="#cb22-22" aria-hidden="true" tabindex="-1"></a>    <span class="co">#applying gradients</span></span>
+<span id="cb22-23"><a href="#cb22-23" aria-hidden="true" tabindex="-1"></a>    optimizer.apply_gradients(<span class="bu">zip</span>(gradients, basic_lstm_model.trainable_variables))</span>
+<span id="cb22-24"><a href="#cb22-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> loss, output_predicted, gradients</span>
+<span id="cb22-25"><a href="#cb22-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-26"><a href="#cb22-26" aria-hidden="true" tabindex="-1"></a><span class="co">##validation step function</span></span>
+<span id="cb22-27"><a href="#cb22-27" aria-hidden="true" tabindex="-1"></a><span class="at">@tf.function</span></span>
+<span id="cb22-28"><a href="#cb22-28" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> val_step(input_vector, output_vector, loss_fn):</span>
+<span id="cb22-29"><a href="#cb22-29" aria-hidden="true" tabindex="-1"></a>    <span class="co">#getting output of validation data</span></span>
+<span id="cb22-30"><a href="#cb22-30" aria-hidden="true" tabindex="-1"></a>    output_predicted <span class="op">=</span> basic_lstm_model(inputs<span class="op">=</span>input_vector, training<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb22-31"><a href="#cb22-31" aria-hidden="true" tabindex="-1"></a>    <span class="co">#loss calculation</span></span>
+<span id="cb22-32"><a href="#cb22-32" aria-hidden="true" tabindex="-1"></a>    loss <span class="op">=</span> loss_fn(output_vector, output_predicted)</span>
+<span id="cb22-33"><a href="#cb22-33" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> loss, output_predicted</span>
+<span id="cb22-34"><a href="#cb22-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-35"><a href="#cb22-35" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> math</span>
+<span id="cb22-36"><a href="#cb22-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-37"><a href="#cb22-37" aria-hidden="true" tabindex="-1"></a><span class="co">#batch size</span></span>
+<span id="cb22-38"><a href="#cb22-38" aria-hidden="true" tabindex="-1"></a>BATCH_SIZE<span class="op">=</span><span class="dv">32</span></span>
+<span id="cb22-39"><a href="#cb22-39" aria-hidden="true" tabindex="-1"></a><span class="co">##number of epochs</span></span>
+<span id="cb22-40"><a href="#cb22-40" aria-hidden="true" tabindex="-1"></a>EPOCHS<span class="op">=</span><span class="dv">10</span></span>
+<span id="cb22-41"><a href="#cb22-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-42"><a href="#cb22-42" aria-hidden="true" tabindex="-1"></a><span class="co">##metrics # Even if you use .fit method, it alsocalculates batchwise loss/metric and aggregates those.  </span></span>
+<span id="cb22-43"><a href="#cb22-43" aria-hidden="true" tabindex="-1"></a>train_loss <span class="op">=</span> tf.keras.metrics.Mean(name<span class="op">=</span><span class="st">'train_loss'</span>)</span>
+<span id="cb22-44"><a href="#cb22-44" aria-hidden="true" tabindex="-1"></a>val_loss <span class="op">=</span> tf.keras.metrics.Mean(name<span class="op">=</span><span class="st">'val_loss'</span>)</span>
+<span id="cb22-45"><a href="#cb22-45" aria-hidden="true" tabindex="-1"></a>train_metric <span class="op">=</span> tf.keras.metrics.Mean(name<span class="op">=</span><span class="st">"train_auc"</span>)</span>
+<span id="cb22-46"><a href="#cb22-46" aria-hidden="true" tabindex="-1"></a>val_metric <span class="op">=</span> tf.keras.metrics.Mean(name<span class="op">=</span><span class="st">"val_metric"</span>)</span>
+<span id="cb22-47"><a href="#cb22-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-48"><a href="#cb22-48" aria-hidden="true" tabindex="-1"></a><span class="co">#tensorboard file writers</span></span>
+<span id="cb22-49"><a href="#cb22-49" aria-hidden="true" tabindex="-1"></a>wtrain <span class="op">=</span> tf.summary.create_file_writer(logdir<span class="op">=</span><span class="st">'logs</span><span class="ch">\\</span><span class="st">train'</span>)</span>
+<span id="cb22-50"><a href="#cb22-50" aria-hidden="true" tabindex="-1"></a>wval <span class="op">=</span> tf.summary.create_file_writer(logdir<span class="op">=</span><span class="st">'logs</span><span class="ch">\\</span><span class="st">val'</span>)</span>
+<span id="cb22-51"><a href="#cb22-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-52"><a href="#cb22-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-53"><a href="#cb22-53" aria-hidden="true" tabindex="-1"></a><span class="co">#no of data points/batch_size i.e number of iterations in the one epoch</span></span>
+<span id="cb22-54"><a href="#cb22-54" aria-hidden="true" tabindex="-1"></a>iters <span class="op">=</span> math.ceil(<span class="dv">100</span><span class="op">/</span>BATCH_SIZE) </span>
+<span id="cb22-55"><a href="#cb22-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-56"><a href="#cb22-56" aria-hidden="true" tabindex="-1"></a><span class="co">#training anf validating</span></span>
+<span id="cb22-57"><a href="#cb22-57" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> epoch <span class="kw">in</span> <span class="bu">range</span>(EPOCHS):</span>
+<span id="cb22-58"><a href="#cb22-58" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb22-59"><a href="#cb22-59" aria-hidden="true" tabindex="-1"></a>    <span class="co">#resetting the states of the loss and metrics</span></span>
+<span id="cb22-60"><a href="#cb22-60" aria-hidden="true" tabindex="-1"></a>    train_loss.reset_states()</span>
+<span id="cb22-61"><a href="#cb22-61" aria-hidden="true" tabindex="-1"></a>    val_loss.reset_states()</span>
+<span id="cb22-62"><a href="#cb22-62" aria-hidden="true" tabindex="-1"></a>    train_metric.reset_states()</span>
+<span id="cb22-63"><a href="#cb22-63" aria-hidden="true" tabindex="-1"></a>    val_metric.reset_states()</span>
+<span id="cb22-64"><a href="#cb22-64" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb22-65"><a href="#cb22-65" aria-hidden="true" tabindex="-1"></a>    <span class="co">##counter for train loop iteration</span></span>
+<span id="cb22-66"><a href="#cb22-66" aria-hidden="true" tabindex="-1"></a>    counter <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb22-67"><a href="#cb22-67" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb22-68"><a href="#cb22-68" aria-hidden="true" tabindex="-1"></a>    <span class="co">#lists to save true and validation data. </span></span>
+<span id="cb22-69"><a href="#cb22-69" aria-hidden="true" tabindex="-1"></a>    train_true <span class="op">=</span> []</span>
+<span id="cb22-70"><a href="#cb22-70" aria-hidden="true" tabindex="-1"></a>    train_predicted <span class="op">=</span> []</span>
+<span id="cb22-71"><a href="#cb22-71" aria-hidden="true" tabindex="-1"></a>    val_true <span class="op">=</span> []</span>
+<span id="cb22-72"><a href="#cb22-72" aria-hidden="true" tabindex="-1"></a>    val_predicted <span class="op">=</span> []</span>
+<span id="cb22-73"><a href="#cb22-73" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb22-74"><a href="#cb22-74" aria-hidden="true" tabindex="-1"></a>    <span class="co">#ietrating over train data batch by batch</span></span>
+<span id="cb22-75"><a href="#cb22-75" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> text_seq, label_seq <span class="kw">in</span> train_dataset:</span>
+<span id="cb22-76"><a href="#cb22-76" aria-hidden="true" tabindex="-1"></a>        <span class="co">#train step</span></span>
+<span id="cb22-77"><a href="#cb22-77" aria-hidden="true" tabindex="-1"></a>        loss_, pred_out, gradients <span class="op">=</span> train_step(text_seq, label_seq, loss_function)</span>
+<span id="cb22-78"><a href="#cb22-78" aria-hidden="true" tabindex="-1"></a>        <span class="co">#adding loss to train loss</span></span>
+<span id="cb22-79"><a href="#cb22-79" aria-hidden="true" tabindex="-1"></a>        train_loss(loss_)</span>
+<span id="cb22-80"><a href="#cb22-80" aria-hidden="true" tabindex="-1"></a>        <span class="co">#counting the step number</span></span>
+<span id="cb22-81"><a href="#cb22-81" aria-hidden="true" tabindex="-1"></a>        temp_step <span class="op">=</span> epoch<span class="op">*</span>iters<span class="op">+</span>counter</span>
+<span id="cb22-82"><a href="#cb22-82" aria-hidden="true" tabindex="-1"></a>        counter <span class="op">=</span> counter <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb22-83"><a href="#cb22-83" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb22-84"><a href="#cb22-84" aria-hidden="true" tabindex="-1"></a>        <span class="co">#calculating AUC for batch</span></span>
+<span id="cb22-85"><a href="#cb22-85" aria-hidden="true" tabindex="-1"></a>        batch_metric <span class="op">=</span> roc_auc_score(label_seq, pred_out)</span>
+<span id="cb22-86"><a href="#cb22-86" aria-hidden="true" tabindex="-1"></a>        train_metric(batch_metric)</span>
+<span id="cb22-87"><a href="#cb22-87" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb22-88"><a href="#cb22-88" aria-hidden="true" tabindex="-1"></a>        <span class="co">#appending it to list</span></span>
+<span id="cb22-89"><a href="#cb22-89" aria-hidden="true" tabindex="-1"></a>        train_predicted.append(pred_out)</span>
+<span id="cb22-90"><a href="#cb22-90" aria-hidden="true" tabindex="-1"></a>        train_true.append(label_seq)</span>
+<span id="cb22-91"><a href="#cb22-91" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb22-92"><a href="#cb22-92" aria-hidden="true" tabindex="-1"></a>        <span class="co">##tensorboard </span></span>
+<span id="cb22-93"><a href="#cb22-93" aria-hidden="true" tabindex="-1"></a>        <span class="cf">with</span> tf.name_scope(<span class="st">'per_step_training'</span>):</span>
+<span id="cb22-94"><a href="#cb22-94" aria-hidden="true" tabindex="-1"></a>            <span class="cf">with</span> wtrain.as_default():</span>
+<span id="cb22-95"><a href="#cb22-95" aria-hidden="true" tabindex="-1"></a>                tf.summary.scalar(<span class="st">"batch_loss"</span>, loss_, step<span class="op">=</span>temp_step)</span>
+<span id="cb22-96"><a href="#cb22-96" aria-hidden="true" tabindex="-1"></a>                tf.summary.scalar(<span class="st">'batch_metric'</span>, batch_metric, step<span class="op">=</span>temp_step)</span>
+<span id="cb22-97"><a href="#cb22-97" aria-hidden="true" tabindex="-1"></a>        <span class="cf">with</span> tf.name_scope(<span class="st">"per_batch_gradients"</span>):</span>
+<span id="cb22-98"><a href="#cb22-98" aria-hidden="true" tabindex="-1"></a>            <span class="cf">with</span> wtrain.as_default():</span>
+<span id="cb22-99"><a href="#cb22-99" aria-hidden="true" tabindex="-1"></a>                <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(basic_lstm_model.trainable_variables)):</span>
+<span id="cb22-100"><a href="#cb22-100" aria-hidden="true" tabindex="-1"></a>                    name_temp <span class="op">=</span> basic_lstm_model.trainable_variables[i].name</span>
+<span id="cb22-101"><a href="#cb22-101" aria-hidden="true" tabindex="-1"></a>                    tf.summary.histogram(name_temp, gradients[i], step<span class="op">=</span>temp_step)</span>
+<span id="cb22-102"><a href="#cb22-102" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb22-103"><a href="#cb22-103" aria-hidden="true" tabindex="-1"></a>    <span class="co">#calculating the final loss and metric</span></span>
+<span id="cb22-104"><a href="#cb22-104" aria-hidden="true" tabindex="-1"></a>    train_true <span class="op">=</span> tf.concat(train_true, axis<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb22-105"><a href="#cb22-105" aria-hidden="true" tabindex="-1"></a>    train_predicted <span class="op">=</span> tf.concat(train_predicted, axis<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb22-106"><a href="#cb22-106" aria-hidden="true" tabindex="-1"></a>    train_loss_final <span class="op">=</span> loss_function(train_true, train_predicted)</span>
+<span id="cb22-107"><a href="#cb22-107" aria-hidden="true" tabindex="-1"></a>    train_metric_auc <span class="op">=</span> roc_auc_score(train_true, train_predicted)</span>
+<span id="cb22-108"><a href="#cb22-108" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb22-109"><a href="#cb22-109" aria-hidden="true" tabindex="-1"></a>    <span class="co">#validation data</span></span>
+<span id="cb22-110"><a href="#cb22-110" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> text_seq_val, label_seq_val <span class="kw">in</span> val_dataset:</span>
+<span id="cb22-111"><a href="#cb22-111" aria-hidden="true" tabindex="-1"></a>        <span class="co">#getting val output</span></span>
+<span id="cb22-112"><a href="#cb22-112" aria-hidden="true" tabindex="-1"></a>        loss_val, pred_out_val <span class="op">=</span> val_step(text_seq_val, label_seq_val, loss_function)</span>
+<span id="cb22-113"><a href="#cb22-113" aria-hidden="true" tabindex="-1"></a>        <span class="co">#appending to lists</span></span>
+<span id="cb22-114"><a href="#cb22-114" aria-hidden="true" tabindex="-1"></a>        val_true.append(label_seq_val)</span>
+<span id="cb22-115"><a href="#cb22-115" aria-hidden="true" tabindex="-1"></a>        val_predicted.append(pred_out_val)</span>
+<span id="cb22-116"><a href="#cb22-116" aria-hidden="true" tabindex="-1"></a>        val_loss(loss_val)</span>
+<span id="cb22-117"><a href="#cb22-117" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb22-118"><a href="#cb22-118" aria-hidden="true" tabindex="-1"></a>        <span class="co">#calculating metric</span></span>
+<span id="cb22-119"><a href="#cb22-119" aria-hidden="true" tabindex="-1"></a>        batch_metric_val <span class="op">=</span> roc_auc_score(label_seq_val, pred_out_val)</span>
+<span id="cb22-120"><a href="#cb22-120" aria-hidden="true" tabindex="-1"></a>        val_metric(batch_metric_val)</span>
+<span id="cb22-121"><a href="#cb22-121" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb22-122"><a href="#cb22-122" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb22-123"><a href="#cb22-123" aria-hidden="true" tabindex="-1"></a>    <span class="co">#calculating final loss and metric   </span></span>
+<span id="cb22-124"><a href="#cb22-124" aria-hidden="true" tabindex="-1"></a>    val_true <span class="op">=</span> tf.concat(val_true, axis<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb22-125"><a href="#cb22-125" aria-hidden="true" tabindex="-1"></a>    val_predicted <span class="op">=</span> tf.concat(val_predicted, axis<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb22-126"><a href="#cb22-126" aria-hidden="true" tabindex="-1"></a>    val_loss_final <span class="op">=</span> loss_function(val_true, val_predicted)</span>
+<span id="cb22-127"><a href="#cb22-127" aria-hidden="true" tabindex="-1"></a>    val_metric_auc <span class="op">=</span> roc_auc_score(val_true, val_predicted)</span>
+<span id="cb22-128"><a href="#cb22-128" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb22-129"><a href="#cb22-129" aria-hidden="true" tabindex="-1"></a>    <span class="co">#printing</span></span>
+<span id="cb22-130"><a href="#cb22-130" aria-hidden="true" tabindex="-1"></a>    template <span class="op">=</span> <span class="st">'''Epoch </span><span class="sc">{}</span><span class="st">, Train Loss: </span><span class="sc">{:0.6f}</span><span class="st">, Mean batch Train Loss: </span><span class="sc">{:0.6f}</span><span class="st">, AUC: </span><span class="sc">{:0.5f}</span><span class="st">, Mean batch Train AUC: </span><span class="sc">{:0.5f}</span><span class="st">,</span></span>
+<span id="cb22-131"><a href="#cb22-131" aria-hidden="true" tabindex="-1"></a><span class="st">    Val Loss: </span><span class="sc">{:0.6f}</span><span class="st">, Mean batch Val Loss: </span><span class="sc">{:0.6f}</span><span class="st">, Val AUC: </span><span class="sc">{:0.5f}</span><span class="st">, Mean batch Val AUC: </span><span class="sc">{:0.5f}</span><span class="st">'''</span></span>
+<span id="cb22-132"><a href="#cb22-132" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb22-133"><a href="#cb22-133" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(template.<span class="bu">format</span>(epoch<span class="op">+</span><span class="dv">1</span>, train_loss_final.numpy(), train_loss.result(), </span>
+<span id="cb22-134"><a href="#cb22-134" aria-hidden="true" tabindex="-1"></a>                          train_metric_auc, train_metric.result(), val_loss_final.numpy(),</span>
+<span id="cb22-135"><a href="#cb22-135" aria-hidden="true" tabindex="-1"></a>                          val_loss.result(), val_metric_auc, val_metric.result()))</span>
+<span id="cb22-136"><a href="#cb22-136" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">'-'</span><span class="op">*</span><span class="dv">30</span>)</span>
+<span id="cb22-137"><a href="#cb22-137" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb22-138"><a href="#cb22-138" aria-hidden="true" tabindex="-1"></a>    <span class="co">#tensorboard</span></span>
+<span id="cb22-139"><a href="#cb22-139" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> tf.name_scope(<span class="st">"per_epoch_loss_metric"</span>):</span>
+<span id="cb22-140"><a href="#cb22-140" aria-hidden="true" tabindex="-1"></a>        <span class="cf">with</span> wtrain.as_default():</span>
+<span id="cb22-141"><a href="#cb22-141" aria-hidden="true" tabindex="-1"></a>            tf.summary.scalar(<span class="st">"mean_loss"</span>, train_loss.result().numpy(), step<span class="op">=</span>epoch)</span>
+<span id="cb22-142"><a href="#cb22-142" aria-hidden="true" tabindex="-1"></a>            tf.summary.scalar(<span class="st">'loss'</span>, train_loss_final.numpy(), step<span class="op">=</span>epoch)</span>
+<span id="cb22-143"><a href="#cb22-143" aria-hidden="true" tabindex="-1"></a>            tf.summary.scalar(<span class="st">'metric'</span>, train_metric_auc, step<span class="op">=</span>epoch)</span>
+<span id="cb22-144"><a href="#cb22-144" aria-hidden="true" tabindex="-1"></a>            tf.summary.scalar(<span class="st">'mean_metric'</span>, train_metric.result().numpy(), step<span class="op">=</span>epoch)</span>
+<span id="cb22-145"><a href="#cb22-145" aria-hidden="true" tabindex="-1"></a>        <span class="cf">with</span> wval.as_default():</span>
+<span id="cb22-146"><a href="#cb22-146" aria-hidden="true" tabindex="-1"></a>            tf.summary.scalar(<span class="st">'mean_loss'</span>, val_loss.result().numpy(), step<span class="op">=</span>epoch)</span>
+<span id="cb22-147"><a href="#cb22-147" aria-hidden="true" tabindex="-1"></a>            tf.summary.scalar(<span class="st">'loss'</span>, val_loss_final.numpy(), step<span class="op">=</span>epoch)</span>
+<span id="cb22-148"><a href="#cb22-148" aria-hidden="true" tabindex="-1"></a>            tf.summary.scalar(<span class="st">'metric'</span>, val_metric_auc, step<span class="op">=</span>epoch)</span>
+<span id="cb22-149"><a href="#cb22-149" aria-hidden="true" tabindex="-1"></a>            tf.summary.scalar(<span class="st">'mean_metric'</span>, val_metric.result().numpy(), step<span class="op">=</span>epoch)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Epoch 1, Train Loss: 0.700775, Mean batch Train Loss: 0.700775, AUC: 0.46829, Mean batch Train AUC: 0.45378,
+    Val Loss: 0.704532, Mean batch Val Loss: 0.704532, Val AUC: 0.48223, Mean batch Val AUC: 0.48844
+------------------------------
+Epoch 2, Train Loss: 0.596350, Mean batch Train Loss: 0.596350, AUC: 0.86608, Mean batch Train AUC: 0.86355,
+    Val Loss: 0.691127, Mean batch Val Loss: 0.691127, Val AUC: 0.52128, Mean batch Val AUC: 0.53295
+------------------------------
+Epoch 3, Train Loss: 0.508518, Mean batch Train Loss: 0.508518, AUC: 0.98973, Mean batch Train AUC: 0.98923,
+    Val Loss: 0.681388, Mean batch Val Loss: 0.681388, Val AUC: 0.55682, Mean batch Val AUC: 0.57112
+------------------------------
+Epoch 4, Train Loss: 0.441114, Mean batch Train Loss: 0.441114, AUC: 0.99554, Mean batch Train AUC: 0.99460,
+    Val Loss: 0.673574, Mean batch Val Loss: 0.673574, Val AUC: 0.58578, Mean batch Val AUC: 0.60539
+------------------------------
+Epoch 5, Train Loss: 0.368985, Mean batch Train Loss: 0.368985, AUC: 0.99868, Mean batch Train AUC: 0.99861,
+    Val Loss: 0.667929, Mean batch Val Loss: 0.667929, Val AUC: 0.61167, Mean batch Val AUC: 0.62760
+------------------------------
+Epoch 6, Train Loss: 0.306646, Mean batch Train Loss: 0.306646, AUC: 0.99956, Mean batch Train AUC: 1.00000,
+    Val Loss: 0.664882, Mean batch Val Loss: 0.664882, Val AUC: 0.62835, Mean batch Val AUC: 0.63807
+------------------------------
+Epoch 7, Train Loss: 0.249700, Mean batch Train Loss: 0.249700, AUC: 1.00000, Mean batch Train AUC: 1.00000,
+    Val Loss: 0.666024, Mean batch Val Loss: 0.666024, Val AUC: 0.63756, Mean batch Val AUC: 0.64217
+------------------------------
+Epoch 8, Train Loss: 0.195906, Mean batch Train Loss: 0.195906, AUC: 1.00000, Mean batch Train AUC: 1.00000,
+    Val Loss: 0.671024, Mean batch Val Loss: 0.671024, Val AUC: 0.64063, Mean batch Val AUC: 0.64618
+------------------------------
+Epoch 9, Train Loss: 0.151549, Mean batch Train Loss: 0.151549, AUC: 1.00000, Mean batch Train AUC: 1.00000,
+    Val Loss: 0.679804, Mean batch Val Loss: 0.679804, Val AUC: 0.64458, Mean batch Val AUC: 0.64464
+------------------------------
+Epoch 10, Train Loss: 0.111988, Mean batch Train Loss: 0.111988, AUC: 1.00000, Mean batch Train AUC: 1.00000,
+    Val Loss: 0.695000, Mean batch Val Loss: 0.695000, Val AUC: 0.64283, Mean batch Val AUC: 0.64751
+------------------------------</code></pre>
+</div>
+</div>
+<p>I trained the model for 10 epochs and my loss is decreasing and AUC of train data became 1(overfit). But some times it may not overfit to the model. If it is not overfitting, there may be so many reasons like code written to create the model is incorrect, the model is not capable of learning the data, learning problems like vanishing or exploding gradients and many more. I will discuss these problems below and These problems may occur even while training with total data.</p>
+<section id="check-whether-forward-propagation-is-correct-or-not" class="level3">
+<h3 class="anchored" data-anchor-id="check-whether-forward-propagation-is-correct-or-not">Check whether forward propagation is correct or not</h3>
+<p>while training NN, we will use the vectorizing implementations of data manipulation. If we did any mistake in these implementations, our training process will give bad results. We can verify this with a simple hack using <code>back prop dependency</code>. Below are the steps to do.</p>
+<ul>
+<li>Take a few data points. Here I am taking 5 data points. You can get it from the data or you can generate random data with the same shape.</li>
+<li>do forward propagation on the model we created with the above batch data.</li>
+<li>write a loss function that takes the true values, predicted values and returns loss as sum of the i^th data point output where i less than 5. I am using 3.</li>
+<li>do the back prop and check the gradients with respect to the input data points. If you are getting non zero gradients only for i-th data point, your forward propagation is right otherwise, there is some error in the forward propagation and you have to debug the code to check the error.</li>
+</ul>
+<p>In the implementation below, I have written basic implementation, not included any tensorboard/metrics and there is no need for those as well.</p>
+<blockquote class="blockquote">
+<p>Note: Gradient won’t flow through the embedding layer so you will get None gradients if you calculate the gradient with of loss with respect to the input. If you have the embedding layer at starting, please remove the embedding layer and give the input directly to the next layer. It is very easy to do because This layer can only be used as the first layer in a model.</p>
+</blockquote>
+<div id="cell-44" class="cell" data-outputid="ced77cfc-9e25-4809-d21c-7fee03be5df0">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co">##same model with name changes and without emedding layer.</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_model_check():</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">##directly using embedding dimention of 1. It is only for checking so no problem with it. </span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    input_layer <span class="op">=</span> Input(shape<span class="op">=</span>(<span class="dv">24</span>, <span class="dv">1</span>), batch_size<span class="op">=</span><span class="dv">10</span>, name<span class="op">=</span><span class="st">"input_layer_debug"</span>)</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">##i am initilizing randomly. But you can use predefined embeddings. </span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">#x_embedd = Embedding(input_dim=13732, output_dim=100, input_length=24, mask_zero=True, </span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>                        <span class="co">#embeddings_initializer=tf.keras.initializers.RandomNormal(mean=0, stddev=1, seed=23),</span></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>                         <span class="co">#name="Embedding_layer")(input_layer)</span></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>    x_lstm <span class="op">=</span> LSTM(units<span class="op">=</span><span class="dv">20</span>, activation<span class="op">=</span><span class="st">'tanh'</span>, recurrent_activation<span class="op">=</span><span class="st">'sigmoid'</span>, use_bias<span class="op">=</span><span class="va">True</span>, </span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>                 kernel_initializer<span class="op">=</span>tf.keras.initializers.glorot_uniform(seed<span class="op">=</span><span class="dv">26</span>),</span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>                 recurrent_initializer<span class="op">=</span>tf.keras.initializers.orthogonal(seed<span class="op">=</span><span class="dv">54</span>),</span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>                 bias_initializer<span class="op">=</span>tf.keras.initializers.zeros(), name<span class="op">=</span><span class="st">"LSTM_layer_debug"</span>)(input_layer)</span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a>    x_out <span class="op">=</span> Dense(<span class="dv">1</span>, activation<span class="op">=</span><span class="st">'sigmoid'</span>, kernel_initializer<span class="op">=</span>tf.keras.initializers.glorot_uniform(seed<span class="op">=</span><span class="dv">45</span>),</span>
+<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a>                  name<span class="op">=</span><span class="st">"output_layer_debug"</span>)(x_lstm)</span>
+<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a>    basic_model_debug <span class="op">=</span> Model(inputs<span class="op">=</span>input_layer, outputs<span class="op">=</span>x_out, name<span class="op">=</span><span class="st">"basic_lstm_model_debug"</span>)</span>
+<span id="cb24-20"><a href="#cb24-20" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb24-21"><a href="#cb24-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> basic_model_debug</span>
+<span id="cb24-22"><a href="#cb24-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-23"><a href="#cb24-23" aria-hidden="true" tabindex="-1"></a>basic_model_debug <span class="op">=</span> get_model_check()</span>
+<span id="cb24-24"><a href="#cb24-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-25"><a href="#cb24-25" aria-hidden="true" tabindex="-1"></a><span class="co">##generated random 5 data points of shape (24,1) i.e 4 time steps and 1 dim embedding. </span></span>
+<span id="cb24-26"><a href="#cb24-26" aria-hidden="true" tabindex="-1"></a>temp_features <span class="op">=</span> np.random.randint(low<span class="op">=</span><span class="dv">1</span>, high<span class="op">=</span><span class="dv">5</span>, size<span class="op">=</span>(<span class="dv">5</span>,<span class="dv">24</span>, <span class="dv">1</span>))</span>
+<span id="cb24-27"><a href="#cb24-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-28"><a href="#cb24-28" aria-hidden="true" tabindex="-1"></a><span class="co">##generated the a random output zero or 1. I think, there is no use for this as well because </span></span>
+<span id="cb24-29"><a href="#cb24-29" aria-hidden="true" tabindex="-1"></a><span class="co">#we will calculate loss only with predicted values</span></span>
+<span id="cb24-30"><a href="#cb24-30" aria-hidden="true" tabindex="-1"></a>temp_outs <span class="op">=</span> np.random.randint(<span class="dv">0</span>, <span class="dv">2</span>, size<span class="op">=</span>(<span class="dv">5</span>,<span class="dv">1</span>))</span>
+<span id="cb24-31"><a href="#cb24-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-32"><a href="#cb24-32" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> loss_to_ckgrads(y_true, y_pred):</span>
+<span id="cb24-33"><a href="#cb24-33" aria-hidden="true" tabindex="-1"></a>    <span class="co">#y_pred is one dimentional you can give directly one data point prediction as loss. </span></span>
+<span id="cb24-34"><a href="#cb24-34" aria-hidden="true" tabindex="-1"></a>    <span class="co">#I am giving loss as 3rd data point prediction so we will get non zero gradients only for 3rd data point. </span></span>
+<span id="cb24-35"><a href="#cb24-35" aria-hidden="true" tabindex="-1"></a>    <span class="co">#if your prediction is sequence, please add all the i-th data point predictions and return those. </span></span>
+<span id="cb24-36"><a href="#cb24-36" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> y_pred[<span class="dv">2</span>]</span>
+<span id="cb24-37"><a href="#cb24-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-38"><a href="#cb24-38" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_gradient(model, x_tensor):</span>
+<span id="cb24-39"><a href="#cb24-39" aria-hidden="true" tabindex="-1"></a>    <span class="co">#taping the gradients</span></span>
+<span id="cb24-40"><a href="#cb24-40" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> tf.GradientTape() <span class="im">as</span> tape:</span>
+<span id="cb24-41"><a href="#cb24-41" aria-hidden="true" tabindex="-1"></a>        <span class="co">#explicitly telling to watch for input vector. it won't watch with repect to any inputs by default.</span></span>
+<span id="cb24-42"><a href="#cb24-42" aria-hidden="true" tabindex="-1"></a>        <span class="co">#it only watches the gradents with weight vectors</span></span>
+<span id="cb24-43"><a href="#cb24-43" aria-hidden="true" tabindex="-1"></a>        tape.watch(x_tensor)</span>
+<span id="cb24-44"><a href="#cb24-44" aria-hidden="true" tabindex="-1"></a>        <span class="co">#model predictions</span></span>
+<span id="cb24-45"><a href="#cb24-45" aria-hidden="true" tabindex="-1"></a>        preds <span class="op">=</span> model(x_tensor)</span>
+<span id="cb24-46"><a href="#cb24-46" aria-hidden="true" tabindex="-1"></a>        <span class="co">#getting the loss</span></span>
+<span id="cb24-47"><a href="#cb24-47" aria-hidden="true" tabindex="-1"></a>        loss <span class="op">=</span> loss_to_ckgrads(temp_outs, preds)</span>
+<span id="cb24-48"><a href="#cb24-48" aria-hidden="true" tabindex="-1"></a>    <span class="co">#getting the gradients    </span></span>
+<span id="cb24-49"><a href="#cb24-49" aria-hidden="true" tabindex="-1"></a>    grads <span class="op">=</span> tape.gradient(loss, x_tensor)</span>
+<span id="cb24-50"><a href="#cb24-50" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> grads</span>
+<span id="cb24-51"><a href="#cb24-51" aria-hidden="true" tabindex="-1"></a><span class="co">##making temp_feature as varible. We can get the gradients only if it is a varible so chnaging it to variable</span></span>
+<span id="cb24-52"><a href="#cb24-52" aria-hidden="true" tabindex="-1"></a>temp_features <span class="op">=</span> tf.Variable(tf.convert_to_tensor(temp_features, dtype<span class="op">=</span>tf.float32))</span>
+<span id="cb24-53"><a href="#cb24-53" aria-hidden="true" tabindex="-1"></a><span class="co">##</span></span>
+<span id="cb24-54"><a href="#cb24-54" aria-hidden="true" tabindex="-1"></a>grads <span class="op">=</span> get_gradient(basic_model_debug, temp_features)</span>
+<span id="cb24-55"><a href="#cb24-55" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> grads:</span>
+<span id="cb24-56"><a href="#cb24-56" aria-hidden="true" tabindex="-1"></a>    <span class="co">#checking whether all zeros or not</span></span>
+<span id="cb24-57"><a href="#cb24-57" aria-hidden="true" tabindex="-1"></a>    <span class="co">#except 3rd all the grdients should be zero i.e True</span></span>
+<span id="cb24-58"><a href="#cb24-58" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="bu">all</span>(i<span class="op">==</span><span class="dv">0</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>True
+True
+False
+True
+True</code></pre>
+</div>
+</div>
+<p><font size="3" face="Calibri"> If you are not getting all true except the i-th one, you may have any issue in your code. You have to check that and resolve it. Without that, don’t go to another step.</font></p><font size="3" face="Calibri">
+</font></section><font size="3" face="Calibri">
+<section id="what-to-do-when-loss-explodes" class="level3">
+<h3 class="anchored" data-anchor-id="what-to-do-when-loss-explodes">What to do when Loss Explodes</h3>
+<p>while training NN, you may get NaN/inf loss becuase of large or small values. Below are some causes</p>
+<ul>
+<li>Numerical stability issues.
+<ul>
+<li>Check the multiplications, if you are multiplying so many tensors at once, apply log and make it to addition.</li>
+<li>Check for the division operation. any zero division is happening or not. Try to add a small constant like 1e-12 to the denominator.</li>
+<li>Check the softmax function. If your vocab size if very large, try not to use the softmax function. calculate the loss based on the logits.</li>
+</ul></li>
+<li>If the updates to the weights are very large, you may get numerical instability and it may explode.
+<ul>
+<li>Check for the Learning rate. If the learning rate is high, you may get this problem as well.</li>
+<li>Check for the exploding gradient problem. In tensorboard, you can visualize the gradient histograms and you can check the problem. If gradients are exploding, try to clip the gradients. You can apply <code>tf.linalg.normalize</code> or <code>tf.clip_by_value</code> to your gradients after getting gradients from the GradientTape.</li>
+</ul></li>
+<li>It may occur because of a poor choice of loss function i.e.&nbsp;allowing the calculation of large error values.</li>
+<li>It may occur because of the poor data preparation i.e.&nbsp;allowing large differences in the target variables.</li>
+</ul>
+</section>
+<section id="what-to-do-when-loss-increases" class="level3">
+<h3 class="anchored" data-anchor-id="what-to-do-when-loss-increases">What to do when loss Increases</h3>
+<p>while training NN, our loss may increase some times. Below are some causes</p>
+<ul>
+<li>Check for the Learning rate. If the learning rate is high, you may get this problem as well.</li>
+<li>Check for the wrong loss function. Especially sign of the loss function.</li>
+<li>Activation functions applying over wrong dimensions. (you can find this out using the point number 1(checking forward propagation is correct or not)</li>
+</ul>
+</section>
+<section id="what-to-do-when-loss-oscillate" class="level3">
+<h3 class="anchored" data-anchor-id="what-to-do-when-loss-oscillate">What to do when loss Oscillate</h3>
+<p>while training NN, our loss may oscillate. Below are some causes</p>
+<ul>
+<li>Check for the Learning rate. If the learning rate is high, you may get this problem as well.</li>
+<li>Sometimes it may occur because of the exploding gradient problem. so check for that one as well. You can check this using the <code>Tensorboard</code>.</li>
+<li>It may occur due to data pairing issues/data corruption. We already discussed this. so make sure to get the proper data.</li>
+</ul>
+</section>
+<section id="what-to-do-when-loss-is-constant" class="level3">
+<h3 class="anchored" data-anchor-id="what-to-do-when-loss-is-constant">What to do when loss is constant</h3>
+<p>while training NN, our loss constant. Below are some causes</p>
+<ul>
+<li>If the updates to the weights are very low, you may end up in the same position.
+<ul>
+<li>Check for the learning rate. If the learning rate is low, our weights won’t update much so you may get this problem.</li>
+<li>Check for Vanishing Gradient problem. In <code>Tensorboard</code>, you can visualize the gradient histograms and you can check the problem.
+<ul>
+<li>You can solve this by changing the activations to relu/leaky relu.</li>
+<li>You can add skip connections to an easier flow of gradients.</li>
+<li>If you have long sequences in RNN, you can divide into smaller ones and train with stateful LSTM’s(Truncated Back prop)</li>
+<li>Better weight initialization may reduce this.</li>
+</ul></li>
+</ul></li>
+<li>Too much regularization may also cause this.</li>
+<li>If you are using Relu activation, it may occur due to the dead neurons.</li>
+<li>Incorrect inputs to the loss function. I already discussed this while discussing the loss functions.</li>
+</ul>
+</section>
+<section id="what-if-we-get-memory-errors" class="level3">
+<h3 class="anchored" data-anchor-id="what-if-we-get-memory-errors">What if we get memory Errors</h3>
+<p>while training NN, many people face the memory exhaust errors because of the computing constraints.</p>
+<ul>
+<li>If you are getting GPU memory exhaust error, try to reduce the batch size and train the neural network.</li>
+<li>If your data doesn’t fit into the RAM you have, Try to create a data pipeline using <code>tf.data</code> or <code>Keras/Python Data Generators</code> and load the batchwise data. My personal choice is to use <code>tf.data</code> pipelines. Please check <a href="https://www.tensorflow.org/guide/data">this</a> blog to know more about it.</li>
+<li>Please try to check for the duplicate operations like creating multiple models, storing temporary variables in the GPU memory.</li>
+</ul>
+</section>
+<section id="what-if-we-underfit-to-the-data" class="level3">
+<h3 class="anchored" data-anchor-id="what-if-we-underfit-to-the-data">What if we Underfit to the data</h3>
+<p>some suggestions to make in decreasing order of priority</p>
+<ul>
+<li>Make your model bigger</li>
+<li>Reduce/Remove regularization(L1/L2/Dropout) if any.</li>
+<li>Do error analysis. based on this try to change the preprocessing/data if needed.</li>
+<li>Read technical papers and choose the state of the art models.</li>
+<li>Tune hyperparameters</li>
+<li>Add custom features if needed.</li>
+</ul>
+</section>
+<section id="what-if-we-overfit-to-the-data" class="level3">
+<h3 class="anchored" data-anchor-id="what-if-we-overfit-to-the-data">What if we Overfit to the data</h3>
+<p>some suggestions to make in decreasing order of priority</p>
+<ul>
+<li>Add more training data</li>
+<li>Add normalization layers(BN, layer norm)</li>
+<li>Add data augmentation</li>
+<li>Increase regularization</li>
+<li>Do error analysis. based on this try to change the preprocessing/data if needed.</li>
+<li>Choose a different model</li>
+<li>Tune hyperparameters</li>
+</ul>
+<p><font size="3" face="Calibri"> You can check some of my other blogs at <a href="https://udibhaskar.github.io/ml_blog/">this</a> link. This is my <a href="https://www.linkedin.com/in/uday-paila-1a496a84/">LinkedIn</a> and <a href="https://github.com/UdiBhaskar">GitHub</a></font></p><font size="3" face="Calibri">
+
+
+</font></section><font size="3" face="Calibri">
+</font></font></section><font size="3" face="Calibri"><font size="3" face="Calibri">
+
+</font></font></main><font size="3" face="Calibri"><font size="3" face="Calibri"> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</font></font></div><font size="3" face="Calibri"><font size="3" face="Calibri"> <!-- /content -->
+
+
+
+
+</font></font></body></html>
